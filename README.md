@@ -68,7 +68,7 @@ No screenshots are stored. Opening, movement and workspace animations are untouc
 The plugin sets **fallback** close and open shaders; explicit per-application shader
 rules take priority. It doesn't animate layer surfaces (bar, launcher, popups).
 Opening runs on top of Hyprland's own open animation, so a strong `windowsIn`
-fade or popin can mask part of it. Hyprland animations must be enabled so a close snapshot exists. Fullscreen,
+fade or popin can mask part of it. `foot` gives Hyprland no window content when it closes, so its close shows only a fading border and no effect; opening works. Alacritty, Ghostty-style and GTK/Qt apps close normally. Hyprland animations must be enabled so a close snapshot exists. Fullscreen,
 rotated/scaled monitors, NVIDIA and multiple simultaneous closes need live testing.
 Fragment travel is limited and may clip at monitor edges. Shatter uses rotating
 rectangular pieces, not a physics simulation or irregular glass mesh.
