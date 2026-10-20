@@ -31,7 +31,8 @@ void main() {
     if(p>=1.0) { fragColor=vec4(0.0); return; }
     if(p<=0.0) { fragColor=texture(tex,v_texcoord); return; }
     vec2 uv=(v_texcoord-window_rect.xy)/max(window_rect.zw,vec2(0.00001));
-    if(!inside(uv)) { fragColor=vec4(0.0); return; }
+    // The border and shadow lie outside the window's rect; fade them quickly instead of leaving fragments.
+    if(!inside(uv)) { fragColor=texture(tex,v_texcoord)*(1.0-smoothstep(0.0,0.3,p)); return; }
     vec2 pixels=max(surface_size*window_rect.zw,vec2(1.0));
     float block=mix(1.0,pixels.x/CELLS*3.0,p*p);
     vec2 grid=max(vec2(1.0),pixels/max(block,1.0));

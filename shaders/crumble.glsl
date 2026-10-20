@@ -31,6 +31,8 @@ void main() {
     if(p>=1.0) { fragColor=vec4(0.0); return; }
     if(p<=0.0) { fragColor=texture(tex,v_texcoord); return; }
     vec2 uv=(v_texcoord-window_rect.xy)/max(window_rect.zw,vec2(0.00001));
+    // The border and shadow lie outside the window's rect; fade them quickly instead of leaving fragments.
+    if(!inside(uv)) { fragColor=texture(tex,v_texcoord)*(1.0-smoothstep(0.0,0.3,p)); return; }
     vec2 grid=gridSize(), cell=floor(uv*grid);
     vec4 result=vec4(0.0);
     // Reverse-map nearby source pieces. Gravity travels at most three rows;
