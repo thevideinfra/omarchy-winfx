@@ -669,7 +669,7 @@ Panel {
 
             ActionButton {
               width: parent.cell
-              text: "Test window"
+              text: "Test"
               enabled: root.controlsEnabled && !tester.running && !root.dirty
               onClicked: { root.errorText = ""; tester.running = true }
             }

@@ -32,7 +32,7 @@ forces a plugin load or upgrades Hyprland. The same steps run from a shell with
 `~/.config/omarchy/plugins/videinfra.omarchy-effects/install.sh --backend`
 (without `--backend` if the backend is already loaded).
 
-Then select Crumble, switch **ON**, and **Apply**. Choose **Test window** and press
+Then select Crumble, switch **ON**, and **Apply**. Choose **Test** and press
 any key inside the window to close it. Tests use applied settings; apply any pending
 edits first.
 
