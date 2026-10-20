@@ -2,7 +2,6 @@
 import argparse
 from contextlib import contextmanager
 import fcntl
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -136,12 +135,18 @@ def shader_source(ctx, value, opening=False):
         if forward not in source:
             raise ValueError('Shader ' + value['effect'] + ' cannot play in reverse.')
         source = source.replace(forward, 'float p=clamp(1.0-progress,0.0,1.0);')
+    # The duration lives in the shader, not the rule tag, so the tag never changes.
+    source, count = re.subn(r'// @duration [0-9.]+', f"// @duration {value['duration'] / 1000:.3f}", source)
+    if count != 1:
+        raise ValueError('Shader ' + value['effect'] + ' must declare one @duration.')
     return source.replace('#define CELLS 18.0', f"#define CELLS {SIZES[value['size']]}.0")
 
 
 def shader_path(ctx, value, opening=False):
-    digest = hashlib.sha256(shader_source(ctx, value, opening).encode()).hexdigest()[:16]
-    return ctx.state / 'shaders' / (value['effect'] + ('-open-' if opening else '-') + digest + '.glsl')
+    # One fixed file per direction, rewritten in place. A window keeps the tags
+    # it was given, so a path that changed with every Apply would pile up
+    # stale tags on open windows and the backend would pick between them by name.
+    return ctx.state / 'shaders' / ('open.glsl' if opening else 'close.glsl')
 
 
 def shader_tags(ctx, value):
@@ -150,11 +155,11 @@ def shader_tags(ctx, value):
     for opening, name, tag in ((False, 'close', 'shader_close_default'), (True, 'open', 'shader_open_default')):
         if value['when'] not in (name, 'both'):
             continue
-        # The backend's path@duration protocol reserves @ and tag parsing uses whitespace.
+        # Tag parsing uses whitespace as a separator and the backend reserves @.
         path = str(shader_path(ctx, value, opening))
         if '@' in path or any(ch.isspace() for ch in path):
             raise ValueError('The shader backend requires a home path without whitespace or @.')
-        tags.append(('omarchy-effects-' + name, '+' + tag + ':' + path + f"@{value['duration'] / 1000:.3f}"))
+        tags.append(('omarchy-effects-' + name, '+' + tag + ':' + path))
     return tags
 
 
@@ -177,6 +182,12 @@ def reload_checked():
         raise RuntimeError('Hyprland configuration error: ' + str(errors))
 
 
+def prune_shaders(ctx):
+    """Delete shaders from releases that named them by content hash."""
+    for old in (ctx.state / 'shaders').glob('*-*.glsl'):
+        old.unlink(missing_ok=True)
+
+
 def apply(ctx, value):
     value = validate(value)
     active = value['enabled'] and value['effect'] != 'default'
@@ -196,6 +207,7 @@ def apply(ctx, value):
                 atomic_write(ctx.active, lua)
                 reload_checked()
                 atomic_write(ctx.settings, json.dumps(value, indent=2) + '\n')
+            prune_shaders(ctx)
         except Exception:
             # Best effort reload of restored config; keep the original error.
             try:

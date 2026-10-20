@@ -60,7 +60,8 @@ class ConfigTests(unittest.TestCase):
         value = {**c.DEFAULTS, 'enabled':True, 'duration':650}
         result = c.render_lua(value, self.ctx)
         self.assertIn('shader_close_default:', result)
-        self.assertIn('@0.650', result)
+        self.assertNotIn('@', result)
+        self.assertIn('// @duration 0.650', c.shader_source(self.ctx, value))
 
     def test_when_selects_close_open_or_both_rules(self):
         for when, close, opened in [('close', True, False), ('open', False, True), ('both', True, True)]:
@@ -79,6 +80,7 @@ class ConfigTests(unittest.TestCase):
                 self.assertIn('clamp(progress,0.0,1.0)', closing)
                 self.assertIn('clamp(1.0-progress,0.0,1.0)', opening)
                 self.assertNotEqual(c.shader_path(self.ctx, value), c.shader_path(self.ctx, value, True))
+                self.assertIn('// @duration 0.450', opening)
 
     def test_settings_file_without_when_gets_the_default(self):
         self.ctx.state.mkdir(parents=True, exist_ok=True)
@@ -146,10 +148,12 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(self.ctx.hypr.read_text(), '-- user settings\n')
         self.assertFalse(self.ctx.active.exists())
 
-    def test_different_shader_contents_use_different_cache_paths(self):
-        small = c.render_lua({**c.DEFAULTS, 'enabled':True, 'size':'small'}, self.ctx)
-        large = c.render_lua({**c.DEFAULTS, 'enabled':True, 'size':'large'}, self.ctx)
-        self.assertNotEqual(small, large)
+    def test_tags_stay_constant_while_shader_contents_change(self):
+        # A changing tag would pile stale tags onto windows that are already open.
+        small = {**c.DEFAULTS, 'enabled':True, 'size':'small', 'duration':300}
+        large = {**c.DEFAULTS, 'enabled':True, 'size':'large', 'duration':900}
+        self.assertEqual(c.render_lua(small, self.ctx), c.render_lua(large, self.ctx))
+        self.assertNotEqual(c.shader_source(self.ctx, small), c.shader_source(self.ctx, large))
 
     def test_cli_install_apply_disable_remove(self):
         import subprocess
