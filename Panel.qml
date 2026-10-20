@@ -227,7 +227,7 @@ Panel {
           AccentSwitch {
             id: powerSwitch
             checked: root.pEnabled
-            enabled: root.controlsEnabled && (root.ready || root.pEnabled || root.pEffect === "default")
+            enabled: root.controlsEnabled && root.installed && (root.ready || root.pEnabled || root.pEffect === "default")
             opacity: enabled ? 1 : 0.4
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
