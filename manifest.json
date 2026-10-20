@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "videinfra.omarchy-effects",
-  "name": "omarchy-effects",
+  "id": "videinfra.omarchy-winfx",
+  "name": "WinFX",
   "version": "0.3.0",
   "author": "thevideinfra",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "barWidget": "Panel.qml"
   },
   "barWidget": {
-    "displayName": "omarchy-effects",
+    "displayName": "WinFX",
     "description": "Choose and preview window open and close effects",
     "category": "Compositor",
     "allowMultiple": false,
@@ -33,7 +33,7 @@
         "options": [
           "compact",
           "normal",
-          "comfortable"
+          "roomy"
         ],
         "defaultValue": "normal",
         "description": "How tightly the panel is laid out."

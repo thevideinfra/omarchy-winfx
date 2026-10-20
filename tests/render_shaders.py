@@ -60,14 +60,14 @@ def program(fragment):
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=Path('/tmp/omarchy-effects-frames'))
+    parser.add_argument('--output',type=Path,default=Path('/tmp/omarchy-winfx-frames'))
     args=parser.parse_args(); args.output.mkdir(parents=True,exist_ok=True)
     w,h=360,240; context(w,h)
     window=Image.new('RGBA',(w,h)); draw=ImageDraw.Draw(window)
     box=(72,48,287,191)
     draw.rounded_rectangle(box,6,fill='#1b2030',outline='#7aa2f7',width=2)
     draw.rectangle((74,68,285,70),fill='#424b66')
-    draw.text((84,53),'omarchy-effects',fill='#c0caf5')
+    draw.text((84,53),'omarchy-winfx',fill='#c0caf5')
     for i in range(5):
         draw.rectangle((88,87+i*17,245-i*12,93+i*17),fill=['#7aa2f7','#9ece6a','#bb9af7'][i%3])
     tex=U(); gl('glGenTextures',None,I,C.POINTER(U))(1,C.byref(tex))
@@ -109,7 +109,7 @@ def main():
     combined=[]
     for step in [0]*10+list(range(31))+[30]*8:
         panel=Image.new('RGB',(w*2,h*2+100),'#0f111a'); d=ImageDraw.Draw(panel)
-        d.text((16,12),'omarchy-effects · actual shaders, synthetic test window',font=font,fill='#c0caf5')
+        d.text((16,12),'omarchy-winfx · actual shaders, synthetic test window',font=font,fill='#c0caf5')
         for i,name in enumerate(['crumble','shatter','dissolve','pixelate']):
             x=(i%2)*w; y=45+(i//2)*(h+20)
             d.text((x+16,y),name.capitalize(),font=font,fill='#7aa2f7')

@@ -1,9 +1,9 @@
-# omarchy-effects
+# WinFX
 
 Window open and close effects for Omarchy. Crumble, Shatter, Dissolve and Pixelate, picked from a panel that follows your theme.
 
 <p>
-  <img src="docs/previews/panel.png" alt="The omarchy-effects panel with its version and GitHub link in the header: the Animate row with its sync switch, eight effects and the default animation, duration, fragment size, backend status and the Test, Reset and Apply buttons" width="360">
+  <img src="docs/previews/panel.png" alt="The WinFX panel with its version and GitHub link in the header: the Animate row with its sync switch, eight effects and the default animation, duration, fragment size, backend status and the Test, Reset and Apply buttons" width="360">
 </p>
 
 ![Actual shaders rendered on a synthetic window](docs/previews/effects.gif)
@@ -15,7 +15,7 @@ hyprpm. Offscreen shader checks are described in `docs/VALIDATION.md`.
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/thevideinfra/omarchy-effects.git --enable --yes
+omarchy plugin add https://github.com/thevideinfra/omarchy-winfx.git --enable --yes
 ```
 
 The widget appears in the bar. Open it and click **Install**. A terminal opens and
@@ -29,7 +29,7 @@ installation stops setup. It then installs/builds/enables
 [HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade). hyprpm may request
 permission to prepare matching headers. Review its output; the installer never
 forces a plugin load or upgrades Hyprland. The same steps run from a shell with
-`~/.config/omarchy/plugins/videinfra.omarchy-effects/install.sh --backend`
+`~/.config/omarchy/plugins/videinfra.omarchy-winfx/install.sh --backend`
 (without `--backend` if the backend is already loaded).
 
 Then select Crumble, switch **ON**, and **Apply**. Choose **Test** and press
@@ -55,14 +55,14 @@ edits first.
 - **Keyboard:** arrows or h/j/k/l select; Return applies; Escape closes.
 
 - **Make it yours.** The ⚙ in the panel header opens its settings: a
-  **Compact**, **Normal** or **Comfortable** layout, a **Small**, **Normal** or
+  **Compact**, **Normal** or **Roomy** layout, a **Small**, **Normal** or
   **Large** font size, an accent colour (the theme's own, or any colour from its
   palette) and a switch for the version and GitHub link. They are stored in
-  `shell.json` and also appear under `omarchy bar set videinfra.omarchy-effects`.
+  `shell.json` and also appear under `omarchy bar set videinfra.omarchy-winfx`.
 
 The panel follows the shell's current theme colours, font, border and scaling.
-There is no background polling process. The preview uses `foot` and `bash`,
-both supplied by Omarchy. No other window is closed by the preview button.
+There is no background polling process. The test window opens in your default terminal (through `xdg-terminal-exec`, supplied by Omarchy).
+No other window is closed by the preview button.
 
 ## Behaviour and limitations
 
@@ -88,11 +88,11 @@ never bypass hyprpm's checks or force-load a `.so`.
 
 ## Files and recovery
 
-- Plugin: `~/.config/omarchy/plugins/videinfra.omarchy-effects/`
-- Settings: `~/.config/omarchy-effects/settings.json`
-- Generated shader/config: `~/.config/omarchy-effects/shaders/*.glsl`, `active.lua`
-- Backups: `~/.config/omarchy-effects/backups/`
-- Integration: one line ending `-- omarchy-effects managed loader` in
+- Plugin: `~/.config/omarchy/plugins/videinfra.omarchy-winfx/`
+- Settings: `~/.config/omarchy-winfx/settings.json`
+- Generated shader/config: `~/.config/omarchy-winfx/shaders/*.glsl`, `active.lua`
+- Backups: `~/.config/omarchy-winfx/backups/`
+- Integration: one line ending `-- omarchy-winfx managed loader` in
   `~/.config/hypr/hyprland.lua`; one widget in `~/.config/omarchy/shell.json`.
 
 Writes are serialized and replaced atomically per file; failed reloads restore
@@ -102,7 +102,7 @@ atomic. No keybindings are changed. Settings use their own file; panel visual
 properties come directly from the shell.
 
 If startup is affected, remove the single line ending
-`-- omarchy-effects managed loader` from `~/.config/hypr/hyprland.lua` from a TTY.
+`-- omarchy-winfx managed loader` from `~/.config/hypr/hyprland.lua` from a TTY.
 This prevents the rule and its startup `hyprpm reload` callback from running.
 If you have another hyprpm startup hook, also run `hyprpm disable HyprWindowShade`
 before restarting the session. Do not delete unrelated configuration.
@@ -112,7 +112,7 @@ before restarting the session. Do not delete unrelated configuration.
 Run before deleting the plugin directory:
 
 ```bash
-~/.config/omarchy/plugins/videinfra.omarchy-effects/uninstall.sh
+~/.config/omarchy/plugins/videinfra.omarchy-winfx/uninstall.sh
 ```
 
 Removes its loader, bar entry and installed plugin files, reloads Hyprland and
@@ -122,10 +122,10 @@ restarts the shell. Keeps settings/backups and the shared HyprWindowShade backen
 ## CLI
 
 ```bash
-~/.config/omarchy/plugins/videinfra.omarchy-effects/bin/omarchy-effects status
-~/.config/omarchy/plugins/videinfra.omarchy-effects/bin/omarchy-effects apply \
+~/.config/omarchy/plugins/videinfra.omarchy-winfx/bin/omarchy-winfx status
+~/.config/omarchy/plugins/videinfra.omarchy-winfx/bin/omarchy-winfx apply \
   '{"enabled":true,"effect":"crumble","duration":450,"size":"medium","when":"close","sync":true,"openEffect":"crumble","openDuration":450,"openSize":"medium"}'
-~/.config/omarchy/plugins/videinfra.omarchy-effects/bin/omarchy-effects preview
+~/.config/omarchy/plugins/videinfra.omarchy-winfx/bin/omarchy-winfx preview
 ```
 
 The helper uses Python's standard library. Effect and settings input is validated;
@@ -138,7 +138,7 @@ those characters as separators.
 ```bash
 python3 -m unittest discover -s tests -v
 bash -n install.sh uninstall.sh
-python3 tests/render_shaders.py --output /tmp/omarchy-effects-frames
+python3 tests/render_shaders.py --output /tmp/omarchy-winfx-frames
 ```
 
 The optional shader renderer requires Mesa EGL with OpenGL ES 3.2 and Pillow.

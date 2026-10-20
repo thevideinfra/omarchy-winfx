@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Render the actual panel with theme/shell interface stubs (not a live shell test).
-Optional dependency: PySide6-Essentials. Output: /tmp/omarchy-effects-panel.png.
+Optional dependency: PySide6-Essentials. Output: /tmp/omarchy-winfx-panel.png.
 """
 import os, sys
 os.environ['QT_QPA_PLATFORM']='offscreen'
@@ -57,6 +57,6 @@ obj.setProperty('loaded',True); obj.setProperty('ready',True); obj.setProperty('
 obj.setProperty('backendText','HyprWindowShade · ready')
 view.resize(388,650); view.setColor('#0f111a'); view.show()
 def done():
- img=view.grabWindow(); img.save('/tmp/omarchy-effects-panel.png'); print('QML instantiated with interface stubs; screenshot saved'); app.quit()
+ img=view.grabWindow(); img.save('/tmp/omarchy-winfx-panel.png'); print('QML instantiated with interface stubs; screenshot saved'); app.quit()
 QTimer.singleShot(500,done)
 app.exec()

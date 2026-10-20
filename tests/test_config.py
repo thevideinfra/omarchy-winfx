@@ -197,7 +197,7 @@ class ConfigTests(unittest.TestCase):
         exe.write_text("#!/usr/bin/env python3\nimport json,sys,os\nargs=sys.argv[1:]\nif args == ['-j','version']: print(json.dumps({'tag':'v0.56.2'}))\nelif args == ['-j','plugin','list']: print(json.dumps([{'name':'HyprWindowShade'}]))\nelif args == ['-j','configerrors']: print('[]')\nelif args == ['reload']: print('ok')\nelse: sys.exit(2)\n")
         exe.chmod(0o755)
         env = {**os.environ, 'HOME':str(self.home), 'PATH':str(fake)+os.pathsep+os.environ['PATH']}
-        helper = self.ctx.plugin / 'bin/omarchy-effects'
+        helper = self.ctx.plugin / 'bin/omarchy-winfx'
         def cli(*args):
             result = subprocess.run([str(helper), *args], text=True, capture_output=True, env=env)
             self.assertEqual(result.returncode, 0, result.stderr)

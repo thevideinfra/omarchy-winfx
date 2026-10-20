@@ -8,13 +8,13 @@ import "Model.js" as Model
 
 Panel {
   id: root
-  moduleName: "videinfra.omarchy-effects"
-  ipcTarget: "videinfra.omarchy-effects"
+  moduleName: "videinfra.omarchy-winfx"
+  ipcTarget: "videinfra.omarchy-winfx"
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  readonly property string helper: decodeURIComponent(Qt.resolvedUrl("bin/omarchy-effects").toString().replace(/^file:\/\//, ""))
-  readonly property string repoUrl: "https://github.com/thevideinfra/omarchy-effects"
+  readonly property string helper: decodeURIComponent(Qt.resolvedUrl("bin/omarchy-winfx").toString().replace(/^file:\/\//, ""))
+  readonly property string repoUrl: "https://github.com/thevideinfra/omarchy-winfx"
   property string version: ""
 
   // ---- Display settings (shell.json, set from the gear view) ----
@@ -46,7 +46,7 @@ Panel {
   // font size setting scales it on top.
   readonly property real fontScale: (0.5 + 0.5 * densityScale) * Model.fontSizeScale(fontSize)
   readonly property real fontTitle: Math.round(Style.font.title * fontScale)
-  readonly property real fontBody: Math.round(Style.font.body * fontScale)
+  readonly property real fontBody: Math.max(8, Math.round(Style.font.body * fontScale))
   readonly property real fontCaption: Math.max(9, Math.round(Style.font.caption * fontScale))
   readonly property real fontDisplay: Math.round(Style.font.display * fontScale)
   // Every button shares one text size and one height; icons in buttons are larger than their labels.
@@ -59,7 +59,7 @@ Panel {
   }
 
   function setSetting(key, value) {
-    Quickshell.execDetached(["omarchy", "bar", "set", "videinfra.omarchy-effects", key, JSON.stringify(value), "--json"])
+    Quickshell.execDetached(["omarchy", "bar", "set", "videinfra.omarchy-winfx", key, JSON.stringify(value), "--json"])
   }
 
   // ---- Effect settings (the helper's own file; they drive the compositor) ----
@@ -170,7 +170,7 @@ Panel {
   function runInstall() {
     var args = [installScript]
     if (!backendLoaded) args.push("--backend")
-    Quickshell.execDetached(["omarchy-launch-tui", "--app-id=org.omarchy.omarchy-effects-install", "bash", "-c",
+    Quickshell.execDetached(["omarchy-launch-tui", "--app-id=org.omarchy.omarchy-winfx-install", "bash", "-c",
       "\"$@\"; code=$?; echo; read -r -n 1 -p 'Press any key to close'; exit $code", "install"].concat(args))
     close()
   }
@@ -237,7 +237,7 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     text: "▦"
-    tooltipText: root.needsSetup ? "omarchy-effects · click to set up" : "omarchy-effects · window effects"
+    tooltipText: root.needsSetup ? "WinFX · click to set up" : "WinFX · window effects"
     onPressed: function(b) { root.toggle() }
   }
 
@@ -353,7 +353,7 @@ Panel {
                 anchors.right: infoRow.visible ? infoRow.left : parent.right
                 anchors.rightMargin: root.sp(8)
                 anchors.verticalCenter: parent.verticalCenter
-                text: "omarchy-effects"
+                text: "WinFX"
                 color: root.bar.foreground
                 font.family: root.bar.fontFamily
                 font.pixelSize: root.fontTitle
@@ -753,7 +753,7 @@ Panel {
       choices: [
         { value: "compact", label: "Compact" },
         { value: "normal", label: "Normal" },
-        { value: "comfortable", label: "Comfortable" }
+        { value: "roomy", label: "Roomy" }
       ]
       selected: root.density
       onPicked: function(value) { root.setSetting("density", value) }

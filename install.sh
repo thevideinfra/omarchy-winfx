@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SRC="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-DEST="$HOME/.config/omarchy/plugins/videinfra.omarchy-effects"
+DEST="$HOME/.config/omarchy/plugins/videinfra.omarchy-winfx"
 backend=0
 case "${1:-}" in
   --backend) backend=1 ;;
@@ -53,7 +53,7 @@ fi
 if [[ $SRC != "$DEST" ]]; then
   [[ ! -L $DEST ]] || { echo 'Refusing to replace a symlinked plugin directory.' >&2; exit 1; }
   if [[ -e $DEST ]]; then
-    BACKUP="$HOME/.config/omarchy-effects/backups/plugin.$(date +%s%N)"
+    BACKUP="$HOME/.config/omarchy-winfx/backups/plugin.$(date +%s%N)"
     mkdir -p "$(dirname -- "$BACKUP")"
     cp -a -- "$DEST" "$BACKUP"
   fi
@@ -61,9 +61,9 @@ if [[ $SRC != "$DEST" ]]; then
   cp -a "$SRC/manifest.json" "$SRC/Panel.qml" "$SRC/Model.js" "$SRC/AccentSource.qml" "$SRC/bin" "$SRC/lib" "$SRC/shaders" \
     "$SRC/install.sh" "$SRC/uninstall.sh" "$SRC/README.md" "$SRC/LICENSE" "$DEST/"
 fi
-"$DEST/bin/omarchy-effects" install
+"$DEST/bin/omarchy-winfx" install
 omarchy restart shell
-printf '\nomarchy-effects installed, initially disabled. Open its bar panel, choose an effect, switch ON and Apply.\n'
+printf '\nWinFX installed, initially disabled. Open its bar panel, choose an effect, switch ON and Apply.\n'
 if (( ! backend )); then
   printf 'If the panel reports a missing backend, click Build backend or run: %q --backend\n' "$DEST/install.sh"
 fi
