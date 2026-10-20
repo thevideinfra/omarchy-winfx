@@ -49,6 +49,9 @@ Panel {
   readonly property real fontBody: Math.round(Style.font.body * fontScale)
   readonly property real fontCaption: Math.max(9, Math.round(Style.font.caption * fontScale))
   readonly property real fontDisplay: Math.round(Style.font.display * fontScale)
+  // Every button shares one text size and one height; icons in buttons are larger than their labels.
+  readonly property real controlHeight: Math.round(fontBody * 2.5)
+  readonly property real fontGlyph: Math.round(fontBody * 1.7)
 
   // Style.space scaled by the chosen density.
   function sp(px) {
@@ -538,7 +541,7 @@ Panel {
               columns: 2
               enabled: root.controlsEnabled
               tall: true
-              choices: root.effects.slice(0, root.effects.length - 1).map(function(e) { return { value: e.key, label: e.glyph + "  " + e.title } })
+              choices: root.effects.slice(0, root.effects.length - 1).map(function(e) { return { value: e.key, label: e.title, glyph: e.glyph } })
               selected: root.curEffect
               onPicked: function(value) { root.setCur("effect", value) }
             }
@@ -547,7 +550,7 @@ Panel {
               width: parent.width
               columns: 1
               enabled: root.controlsEnabled
-              choices: [{ value: "default", label: "−  Default Omarchy animation" }]
+              choices: [{ value: "default", label: "Default Omarchy animation", glyph: "⊘" }]
               selected: root.curEffect
               onPicked: function(value) { root.setCur("effect", value) }
             }
@@ -578,32 +581,21 @@ Panel {
               hint: root.curDuration + " ms"
             }
 
-            Row {
+            Segmented {
               width: parent.width
-              spacing: root.sp(6)
-
-              Segmented {
-                width: root.sp(40)
-                columns: 1
-                enabled: root.curDuration > 150
-                choices: [{ value: -50, label: "−" }]
-                onPicked: function(value) { root.setCur("duration", Math.max(150, root.curDuration - 50)) }
-              }
-
-              Segmented {
-                width: parent.width - root.sp(104) - 2 * parent.spacing
-                columns: 3
-                choices: [250, 450, 750].map(function(v) { return { value: v, label: String(v) } })
-                selected: root.curDuration
-                onPicked: function(value) { root.setCur("duration", value) }
-              }
-
-              Segmented {
-                width: root.sp(40)
-                columns: 1
-                enabled: root.curDuration < 1500
-                choices: [{ value: 50, label: "+" }]
-                onPicked: function(value) { root.setCur("duration", Math.min(1500, root.curDuration + 50)) }
+              columns: 5
+              choices: [
+                { value: "less", label: "−" },
+                { value: 250, label: "250" },
+                { value: 450, label: "450" },
+                { value: 750, label: "750" },
+                { value: "more", label: "+" }
+              ]
+              selected: root.curDuration
+              onPicked: function(value) {
+                if (value === "less") root.setCur("duration", Math.max(150, root.curDuration - 50))
+                else if (value === "more") root.setCur("duration", Math.min(1500, root.curDuration + 50))
+                else root.setCur("duration", value)
               }
             }
           }
@@ -836,7 +828,7 @@ Panel {
       text: settingRow.label
       color: root.bar.foreground
       font.family: root.bar.fontFamily
-      font.pixelSize: Math.round(root.fontBody * 0.92)
+      font.pixelSize: root.fontBody
       elide: Text.ElideRight
     }
 
@@ -958,7 +950,7 @@ Panel {
         required property var modelData
         readonly property bool chosen: segmented.selected === modelData.value
         width: segmented.cellWidth
-        implicitHeight: choiceText.implicitHeight + root.sp(segmented.tall ? 26 : 12)
+        implicitHeight: Math.round(root.controlHeight * (segmented.tall ? 1.4 : 1))
         radius: root.sp(7)
         color: chosen
           ? Util.alpha(root.accent, 0.12)
@@ -967,18 +959,33 @@ Panel {
         border.color: chosen ? root.accent : Util.alpha(root.bar.foreground, 0.12)
         opacity: segmented.enabled ? 1 : 0.4
 
-        Text {
-          id: choiceText
+        Row {
           anchors.centerIn: parent
-          width: parent.width - root.sp(8)
-          horizontalAlignment: Text.AlignHCenter
-          textFormat: Text.PlainText
-          text: choice.modelData.label
-          color: choice.chosen ? root.accent : root.bar.foreground
-          font.family: root.bar.fontFamily
-          font.pixelSize: root.fontCaption
-          font.bold: choice.chosen
-          elide: Text.ElideRight
+          spacing: root.sp(8)
+
+          // The icon sits in a fixed slot so every label in a grid lines up.
+          Text {
+            visible: !!choice.modelData.glyph
+            anchors.verticalCenter: parent.verticalCenter
+            width: root.fontGlyph * 1.2
+            horizontalAlignment: Text.AlignHCenter
+            textFormat: Text.PlainText
+            text: choice.modelData.glyph || ""
+            color: choice.chosen ? root.accent : root.bar.foreground
+            font.family: root.bar.fontFamily
+            font.pixelSize: root.fontGlyph
+          }
+
+          Text {
+            id: choiceText
+            anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.PlainText
+            text: choice.modelData.label
+            color: choice.chosen ? root.accent : root.bar.foreground
+            font.family: root.bar.fontFamily
+            font.pixelSize: root.fontBody
+            font.bold: choice.chosen
+          }
         }
 
         MouseArea {
@@ -1001,7 +1008,7 @@ Panel {
     property bool primary: false
     signal clicked()
 
-    implicitHeight: actionText.implicitHeight + root.sp(12)
+    implicitHeight: root.controlHeight
     radius: root.sp(7)
     color: primary
       ? Util.alpha(root.accent, 0.12)
@@ -1022,7 +1029,7 @@ Panel {
       text: action.text
       color: action.primary ? root.accent : root.bar.foreground
       font.family: root.bar.fontFamily
-      font.pixelSize: root.fontCaption
+      font.pixelSize: root.fontBody
       font.bold: action.primary
       elide: Text.ElideRight
     }
