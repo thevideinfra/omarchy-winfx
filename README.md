@@ -42,9 +42,12 @@ edits first.
   Dissolve removes fine blocks; Pixelate enlarges blocks before fading.
 - **Duration:** 150–1500 ms, ±50ms buttons and 250/450/750ms presets.
 - **Fragment size:** Small / Medium / Large; also controls dissolve/pixel blocks.
-- **Animate:** Closing, Opening or Both. Opening plays the chosen effect in
-  reverse: the window starts broken up and assembles itself.
-- **OFF or Default:** restores the pre-existing open and close animations.
+- **Animate:** Closing, Opening or Both. Opening plays an effect in reverse: the
+  window starts broken up and assembles itself. With Both, **Same effect for both**
+  is on by default; turn it off to pick a different effect, duration and fragment
+  size for opening and closing (use the Edit closing / Edit opening buttons).
+- **OFF or Default:** restores the pre-existing animation for that direction;
+  Default on one side keeps Omarchy's animation there and shades only the other.
 - **Reset:** stages disabled, Crumble, 450ms, medium. Apply commits it.
 - **Keyboard:** arrows or h/j/k/l select; Return applies; Escape closes.
 
@@ -117,7 +120,7 @@ restarts the shell. Keeps settings/backups and the shared HyprWindowShade backen
 ```bash
 ~/.config/omarchy/plugins/videinfra.omarchy-effects/bin/omarchy-effects status
 ~/.config/omarchy/plugins/videinfra.omarchy-effects/bin/omarchy-effects apply \
-  '{"enabled":true,"effect":"crumble","duration":450,"size":"medium"}'
+  '{"enabled":true,"effect":"crumble","duration":450,"size":"medium","when":"close","sync":true,"openEffect":"crumble","openDuration":450,"openSize":"medium"}'
 ~/.config/omarchy/plugins/videinfra.omarchy-effects/bin/omarchy-effects preview
 ```
 
