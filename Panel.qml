@@ -60,12 +60,19 @@ Panel {
   }
 
   // ---- Effect settings (the helper's own file; they drive the compositor) ----
-  readonly property var defaults: ({ enabled: false, effect: "crumble", duration: 450, size: "medium", when: "close" })
+  readonly property var defaults: ({ enabled: false, effect: "crumble", duration: 450, size: "medium", when: "close",
+    sync: true, openEffect: "crumble", openDuration: 450, openSize: "medium" })
   property bool pEnabled: false
   property string pEffect: "crumble"
   property int pDuration: 450
   property string pSize: "medium"
   property string pWhen: "close"
+  property bool pSync: true
+  property string pOpenEffect: "crumble"
+  property int pOpenDuration: 450
+  property string pOpenSize: "medium"
+  // Which direction the effect controls edit while closing and opening differ.
+  property string editing: "close"
   property var saved: defaults
   property bool ready: false
   property bool loaded: false
@@ -83,18 +90,62 @@ Panel {
     { key: "pixelate", title: "Pixelate", glyph: "▩", detail: "Growing blocks fade into the desktop." },
     { key: "default", title: "Default", glyph: "−", detail: "Use your existing Omarchy window animations." }
   ]
-  readonly property bool dirty: pEnabled !== saved.enabled || pEffect !== saved.effect
-    || pDuration !== saved.duration || pSize !== saved.size || pWhen !== saved.when
-  // A fresh `omarchy plugin add` has no loader or backend behind it. Offer to
-  // install them instead of showing controls that cannot work yet.
-  readonly property bool needsSetup: loaded && (!installed || (!ready && !saved.enabled))
-  readonly property bool canInstall: needsSetup && versionOk
+  // The direction the effect controls edit: with one direction picked it is that
+  // one, with both synced it is closing (opening mirrors it), otherwise the
+  // direction chosen in the selector.
+  readonly property bool editOpen: pWhen === "open" || (pWhen === "both" && !pSync && editing === "open")
+  readonly property bool synced: pWhen === "both" && pSync
+  readonly property string curEffect: editOpen ? pOpenEffect : pEffect
+  readonly property int curDuration: editOpen ? pOpenDuration : pDuration
+  readonly property string curSize: editOpen ? pOpenSize : pSize
+  readonly property bool curDefault: curEffect === "default"
+  function setCur(key, value) {
+    if (editOpen) {
+      if (key === "effect") pOpenEffect = value
+      else if (key === "duration") pOpenDuration = value
+      else pOpenSize = value
+    } else {
+      if (key === "effect") pEffect = value
+      else if (key === "duration") pDuration = value
+      else pSize = value
+    }
+  }
+  // Turning sync off starts opening from what closing has now.
+  function setSync(on) {
+    if (!on) { pOpenEffect = pEffect; pOpenDuration = pDuration; pOpenSize = pSize; editing = "close" }
+    pSync = on
+  }
+  function setWhen(value) {
+    pWhen = value
+    if (value !== "both") editing = value
+  }
+  // The effects that would actually play, to know whether the backend is needed.
+  function playing() {
+    var list = []
+    if (pWhen !== "open") list.push(pEffect)
+    if (pWhen !== "close") list.push(synced ? pEffect : pOpenEffect)
+    return list.filter(function(e) { return e !== "default" })
+  }
+  readonly property bool needsBackend: pEnabled && playing().length > 0
+  readonly property bool dirty: JSON.stringify(shape(staged())) !== JSON.stringify(shape(saved))
   readonly property bool controlsEnabled: loaded && !busy && !reader.running
-  readonly property bool canApply: loaded && dirty && !busy && !reader.running
-    && (!pEnabled || pEffect === "default" || ready)
+  readonly property bool canApply: loaded && dirty && !busy && !reader.running && (!needsBackend || ready)
 
-  function staged() { return { enabled: pEnabled, effect: pEffect, duration: pDuration, size: pSize, when: pWhen } }
-  function stage(s) { pEnabled = s.enabled; pEffect = s.effect; pDuration = s.duration; pSize = s.size; pWhen = s.when }
+  // Same keys, same order, opening mirrored when synced: staged and saved compare equal when nothing changed.
+  function shape(s) {
+    var mirror = s.sync && s.when === "both"
+    return [s.enabled, s.effect, s.duration, s.size, s.when, s.sync,
+      mirror ? s.effect : s.openEffect, mirror ? s.duration : s.openDuration, mirror ? s.size : s.openSize]
+  }
+  function staged() {
+    return { enabled: pEnabled, effect: pEffect, duration: pDuration, size: pSize, when: pWhen, sync: pSync,
+      openEffect: pOpenEffect, openDuration: pOpenDuration, openSize: pOpenSize }
+  }
+  function stage(s) {
+    pEnabled = s.enabled; pEffect = s.effect; pDuration = s.duration; pSize = s.size; pWhen = s.when; pSync = s.sync
+    pOpenEffect = s.openEffect; pOpenDuration = s.openDuration; pOpenSize = s.openSize
+    editing = s.when === "open" ? "open" : "close"
+  }
   function reload() { if (!reader.running) reader.running = true }
   function apply() {
     if (!canApply) return
@@ -113,11 +164,11 @@ Panel {
     close()
   }
   function selectEffect(delta) {
-    var index = effects.findIndex(function(e) { return e.key === pEffect })
-    pEffect = effects[(index + delta + effects.length) % effects.length].key
+    var index = effects.findIndex(function(e) { return e.key === curEffect })
+    setCur("effect", effects[(index + delta + effects.length) % effects.length].key)
   }
   function description() {
-    for (var i = 0; i < effects.length; i++) if (effects[i].key === pEffect) return effects[i].detail
+    for (var i = 0; i < effects.length; i++) if (effects[i].key === curEffect) return effects[i].detail
     return ""
   }
   onOpenedChanged: if (opened) { errorText = ""; settingsOpen = false; reload() }
@@ -228,7 +279,7 @@ Panel {
           AccentSwitch {
             id: powerSwitch
             checked: root.pEnabled
-            enabled: root.controlsEnabled && root.installed && (root.ready || root.pEnabled || root.pEffect === "default")
+            enabled: root.controlsEnabled && root.installed && (root.ready || root.pEnabled || root.playing().length === 0)
             opacity: enabled ? 1 : 0.4
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
@@ -422,11 +473,56 @@ Panel {
           Column {
             width: parent.width
             spacing: root.sp(8)
+            enabled: root.controlsEnabled
+
+            SectionLabel {
+              icon: "\uf021"
+              text: "ANIMATE"
+              hint: root.dirty ? "UNSAVED" : ""
+            }
+
+            Segmented {
+              width: parent.width
+              columns: 3
+              choices: [
+                { value: "close", label: "Closing" },
+                { value: "open", label: "Opening" },
+                { value: "both", label: "Both" }
+              ]
+              selected: root.pWhen
+              onPicked: function(value) { root.setWhen(value) }
+            }
+
+            SettingSwitch {
+              width: parent.width
+              visible: root.pWhen === "both"
+              label: "Same effect for both"
+              checked: root.pSync
+              onToggled: root.setSync(!root.pSync)
+            }
+
+            Segmented {
+              width: parent.width
+              visible: root.pWhen === "both" && !root.pSync
+              columns: 2
+              choices: [
+                { value: "close", label: "Edit closing" },
+                { value: "open", label: "Edit opening" }
+              ]
+              selected: root.editing
+              onPicked: function(value) { root.editing = value }
+            }
+          }
+
+          PanelSeparator { foreground: root.bar.foreground }
+
+          Column {
+            width: parent.width
+            spacing: root.sp(8)
 
             SectionLabel {
               icon: ""
-              text: "CLOSE EFFECT"
-              hint: root.dirty ? "UNSAVED" : ""
+              text: root.synced ? "EFFECT" : root.editOpen ? "OPENING EFFECT" : "CLOSING EFFECT"
             }
 
             Segmented {
@@ -435,8 +531,8 @@ Panel {
               enabled: root.controlsEnabled
               tall: true
               choices: root.effects.slice(0, 4).map(function(e) { return { value: e.key, label: e.glyph + "  " + e.title } })
-              selected: root.pEffect
-              onPicked: function(value) { root.pEffect = value }
+              selected: root.curEffect
+              onPicked: function(value) { root.setCur("effect", value) }
             }
 
             Segmented {
@@ -444,8 +540,8 @@ Panel {
               columns: 1
               enabled: root.controlsEnabled
               choices: [{ value: "default", label: "−  Default Omarchy animation" }]
-              selected: root.pEffect
-              onPicked: function(value) { root.pEffect = value }
+              selected: root.curEffect
+              onPicked: function(value) { root.setCur("effect", value) }
             }
 
             Text {
@@ -465,37 +561,13 @@ Panel {
           Column {
             width: parent.width
             spacing: root.sp(8)
-            enabled: root.controlsEnabled && root.pEffect !== "default"
-            opacity: enabled ? 1 : 0.4
-
-            SectionLabel {
-              icon: "\uf021"
-              text: "ANIMATE"
-            }
-
-            Segmented {
-              width: parent.width
-              columns: 3
-              choices: [
-                { value: "close", label: "Closing" },
-                { value: "open", label: "Opening" },
-                { value: "both", label: "Both" }
-              ]
-              selected: root.pWhen
-              onPicked: function(value) { root.pWhen = value }
-            }
-          }
-
-          Column {
-            width: parent.width
-            spacing: root.sp(8)
-            enabled: root.controlsEnabled && root.pEffect !== "default"
+            enabled: root.controlsEnabled && !root.curDefault
             opacity: enabled ? 1 : 0.4
 
             SectionLabel {
               icon: ""
               text: "DURATION"
-              hint: root.pDuration + " ms"
+              hint: root.curDuration + " ms"
             }
 
             Row {
@@ -505,25 +577,25 @@ Panel {
               Segmented {
                 width: root.sp(40)
                 columns: 1
-                enabled: root.pDuration > 150
+                enabled: root.curDuration > 150
                 choices: [{ value: -50, label: "−" }]
-                onPicked: function(value) { root.pDuration = Math.max(150, root.pDuration - 50) }
+                onPicked: function(value) { root.setCur("duration", Math.max(150, root.curDuration - 50)) }
               }
 
               Segmented {
                 width: parent.width - root.sp(104) - 2 * parent.spacing
                 columns: 3
                 choices: [250, 450, 750].map(function(v) { return { value: v, label: String(v) } })
-                selected: root.pDuration
-                onPicked: function(value) { root.pDuration = value }
+                selected: root.curDuration
+                onPicked: function(value) { root.setCur("duration", value) }
               }
 
               Segmented {
                 width: root.sp(40)
                 columns: 1
-                enabled: root.pDuration < 1500
+                enabled: root.curDuration < 1500
                 choices: [{ value: 50, label: "+" }]
-                onPicked: function(value) { root.pDuration = Math.min(1500, root.pDuration + 50) }
+                onPicked: function(value) { root.setCur("duration", Math.min(1500, root.curDuration + 50)) }
               }
             }
           }
@@ -531,7 +603,7 @@ Panel {
           Column {
             width: parent.width
             spacing: root.sp(8)
-            enabled: root.controlsEnabled && root.pEffect !== "default"
+            enabled: root.controlsEnabled && !root.curDefault
             opacity: enabled ? 1 : 0.4
 
             SectionLabel {
@@ -547,8 +619,8 @@ Panel {
                 { value: "medium", label: "Medium" },
                 { value: "large", label: "Large" }
               ]
-              selected: root.pSize
-              onPicked: function(value) { root.pSize = value }
+              selected: root.curSize
+              onPicked: function(value) { root.setCur("size", value) }
             }
           }
 

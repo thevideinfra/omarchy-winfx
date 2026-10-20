@@ -74,13 +74,47 @@ class ConfigTests(unittest.TestCase):
     def test_opening_plays_the_effect_in_reverse(self):
         for effect in ['crumble', 'shatter', 'dissolve', 'pixelate']:
             with self.subTest(effect=effect):
-                value = {**c.DEFAULTS, 'effect':effect}
+                value = {**c.DEFAULTS, 'effect':effect, 'openEffect':effect}
                 closing = c.shader_source(self.ctx, value)
                 opening = c.shader_source(self.ctx, value, opening=True)
                 self.assertIn('clamp(progress,0.0,1.0)', closing)
                 self.assertIn('clamp(1.0-progress,0.0,1.0)', opening)
                 self.assertNotEqual(c.shader_path(self.ctx, value), c.shader_path(self.ctx, value, True))
                 self.assertIn('// @duration 0.450', opening)
+
+    def test_sync_mirrors_closing_onto_opening(self):
+        value = c.validate({**c.DEFAULTS, 'effect':'shatter', 'duration':900, 'size':'large',
+                            'openEffect':'dissolve', 'openDuration':200, 'openSize':'small', 'sync':True, 'when':'both'})
+        self.assertEqual((value['openEffect'], value['openDuration'], value['openSize']), ('shatter', 900, 'large'))
+        # Opening alone has its own settings; sync only ties the two together.
+        solo = c.validate({**c.DEFAULTS, 'when':'open', 'sync':True, 'openEffect':'dissolve'})
+        self.assertEqual(solo['openEffect'], 'dissolve')
+
+    def test_unsynced_directions_use_their_own_effect_duration_and_size(self):
+        value = c.validate({**c.DEFAULTS, 'enabled':True, 'when':'both', 'sync':False, 'effect':'crumble', 'duration':300,
+                            'size':'small', 'openEffect':'pixelate', 'openDuration':800, 'openSize':'large'})
+        closing = c.shader_source(self.ctx, value)
+        opening = c.shader_source(self.ctx, value, opening=True)
+        self.assertIn('// @duration 0.300', closing)
+        self.assertIn('// @duration 0.800', opening)
+        self.assertIn('#define CELLS 28.0', closing)
+        self.assertIn('#define CELLS 11.0', opening)
+        self.assertNotEqual(closing.replace('28.0', ''), opening.replace('11.0', ''))
+
+    def test_a_default_side_gets_no_rule(self):
+        value = {**c.DEFAULTS, 'enabled':True, 'when':'both', 'sync':False, 'effect':'default', 'openEffect':'crumble'}
+        result = c.render_lua(value, self.ctx)
+        self.assertNotIn('shader_close_default', result)
+        self.assertIn('shader_open_default', result)
+        both_default = {**value, 'openEffect':'default'}
+        self.assertNotIn('hl.window_rule', c.render_lua(both_default, self.ctx))
+
+    def test_old_settings_file_makes_opening_follow_closing(self):
+        self.ctx.state.mkdir(parents=True, exist_ok=True)
+        self.ctx.settings.write_text(json.dumps({'enabled':True,'effect':'shatter','duration':700,'size':'large','when':'both'}))
+        value = c.read_settings(self.ctx)
+        self.assertTrue(value['sync'])
+        self.assertEqual((value['openEffect'], value['openDuration'], value['openSize']), ('shatter', 700, 'large'))
 
     def test_settings_file_without_when_gets_the_default(self):
         self.ctx.state.mkdir(parents=True, exist_ok=True)
@@ -173,7 +207,7 @@ class ConfigTests(unittest.TestCase):
         self.assertTrue(cli('status')['ready'])
         active = {**c.DEFAULTS, 'enabled':True, 'effect':'shatter'}
         cli('apply',json.dumps(active))
-        self.assertEqual(cli('status')['settings'],active)
+        self.assertEqual(cli('status')['settings'],c.validate(active))
         self.assertIn('shader_close_default:',self.ctx.active.read_text())
         cli('apply',json.dumps(c.DEFAULTS))
         self.assertNotIn('hl.window_rule',self.ctx.active.read_text())
