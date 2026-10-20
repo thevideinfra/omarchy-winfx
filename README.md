@@ -38,10 +38,13 @@ edits first.
 
 ## Controls
 
-- **Effect:** Crumble falls in pieces; Shatter scatters rotating pieces;
-  Dissolve removes fine blocks; Pixelate enlarges blocks before fading.
+- **Effect:** Crumble falls in pieces; Shatter breaks into jagged glass shards;
+  Dissolve removes fine blocks; Pixelate enlarges blocks before fading; Explode
+  blasts chunks outward from a flash; Build drops bricks away from the top (opening
+  builds from the bottom up); Blinds slide strips off alternately; Glitch jumps
+  bands, splits colours and drops blocks out.
 - **Duration:** 150–1500 ms, ±50ms buttons and 250/450/750ms presets.
-- **Fragment size:** Small / Medium / Large; also controls dissolve/pixel blocks.
+- **Fragment size:** Small / Medium / Large; scales the pieces, bricks, strips or glitch bands of every effect.
 - **Animate:** Closing, Opening or Both. Opening plays an effect in reverse: the
   window starts broken up and assembles itself. With Both, **Same effect for both**
   is on by default; turn it off to pick a different effect, duration and fragment
@@ -73,8 +76,9 @@ rules take priority. It doesn't animate layer surfaces (bar, launcher, popups).
 Opening runs on top of Hyprland's own open animation, so a strong `windowsIn`
 fade or popin can mask part of it. `foot` gives Hyprland no window content when it closes, so its close shows only a fading border and no effect; opening works. Alacritty, Ghostty-style and GTK/Qt apps close normally. Hyprland animations must be enabled so a close snapshot exists. Fullscreen,
 rotated/scaled monitors, NVIDIA and multiple simultaneous closes need live testing.
-Fragment travel is limited and may clip at monitor edges. Shatter uses rotating
-rectangular pieces, not a physics simulation or irregular glass mesh.
+Pieces are drawn inside the window's own box, so Explode's far chunks and Blinds' strips
+are clipped at its edges and fragment travel is limited. Shatter cuts the window into jagged
+Voronoi shards; it is not a physics simulation.
 
 This release intentionally rejects other Hyprland versions. After an upgrade,
 leave effects disabled until compatibility has been checked. `hyprpm update`

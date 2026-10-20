@@ -72,7 +72,7 @@ class ConfigTests(unittest.TestCase):
                 self.assertEqual(result.count('hl.window_rule'), close + opened)
 
     def test_opening_plays_the_effect_in_reverse(self):
-        for effect in ['crumble', 'shatter', 'dissolve', 'pixelate']:
+        for effect in [e for e in c.EFFECTS if e != 'default']:
             with self.subTest(effect=effect):
                 value = {**c.DEFAULTS, 'effect':effect, 'openEffect':effect}
                 closing = c.shader_source(self.ctx, value)

@@ -85,9 +85,13 @@ Panel {
   property string backendText: "Checking backend…"
   readonly property var effects: [
     { key: "crumble", title: "Crumble", glyph: "▦", detail: "Small pieces fall away and fade." },
-    { key: "shatter", title: "Shatter", glyph: "✦", detail: "Fragments scatter outward and turn." },
+    { key: "shatter", title: "Shatter", glyph: "✦", detail: "Breaks like glass into jagged shards that tumble and fall." },
     { key: "dissolve", title: "Dissolve", glyph: "⋯", detail: "Fine blocks dissolve in a noise pattern." },
     { key: "pixelate", title: "Pixelate", glyph: "▩", detail: "Growing blocks fade into the desktop." },
+    { key: "explode", title: "Explode", glyph: "✹", detail: "Chunks blast outward from a flash. Opening pulls them together." },
+    { key: "build", title: "Build", glyph: "▤", detail: "Bricks drop away from the top down. Opening builds from the bottom up." },
+    { key: "blinds", title: "Blinds", glyph: "☰", detail: "Strips slide off in alternating directions." },
+    { key: "glitch", title: "Glitch", glyph: "▚", detail: "Bands jump, colours split and blocks drop out." },
     { key: "default", title: "Default", glyph: "−", detail: "Use your existing Omarchy window animations." }
   ]
   // The direction the effect controls edit: with one direction picked it is that
@@ -534,7 +538,7 @@ Panel {
               columns: 2
               enabled: root.controlsEnabled
               tall: true
-              choices: root.effects.slice(0, 4).map(function(e) { return { value: e.key, label: e.glyph + "  " + e.title } })
+              choices: root.effects.slice(0, root.effects.length - 1).map(function(e) { return { value: e.key, label: e.glyph + "  " + e.title } })
               selected: root.curEffect
               onPicked: function(value) { root.setCur("effect", value) }
             }
