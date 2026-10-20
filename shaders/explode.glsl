@@ -38,7 +38,7 @@ void main() {
     vec2 gs=gridSize(pixels);
     vec2 x=uv*gs, mid=gs*0.5;
     // Every chunk rides one outward scale, so a pixel knows roughly where its chunk started.
-    float k=1.0+0.9*(1.0-(1.0-p)*(1.0-p));
+    float k=1.0+1.6*pow(p,0.75);
     vec2 base=floor(mid+(x-mid)/k);
     vec4 result=vec4(0.0);
     for(int j=-3;j<=3;j++) for(int i=-3;i<=3;i++) {
@@ -50,10 +50,10 @@ void main() {
         float delay=0.15*clamp(length(away/gs)/0.7,0.0,1.0);
         float t=clamp((p-delay)/(1.0-delay),0.0,1.0);
         vec2 at=mid+away*k+dir*(1.2*h.x)*t+vec2(0.0,t*t);
-        float scale=1.0-0.5*t;
+        float scale=1.0-0.65*t;
         vec2 local=rotate2(-(h.y-0.5)*5.0*t)*(x-at)/scale;
         if(any(greaterThanEqual(abs(local),vec2(0.5)))) continue;
-        vec4 part=sourceAt((c+local)/gs)*(1.0-smoothstep(0.45,1.0,t));
+        vec4 part=sourceAt((c+local)/gs)*(1.0-smoothstep(0.3,1.0,t));
         result=part+result*(1.0-part.a);
     }
     // A short white flash at the centre as it goes off.
