@@ -2,17 +2,83 @@
   "schemaVersion": 1,
   "id": "videinfra.omarchy-effects",
   "name": "omarchy-effects",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "thevideinfra",
   "license": "MIT",
   "description": "Theme-native window closing effects: crumble, shatter, dissolve and pixelate",
-  "kinds": ["bar-widget"],
-  "entryPoints": {"barWidget": "Panel.qml"},
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
   "barWidget": {
     "displayName": "omarchy-effects",
     "description": "Choose and preview window closing effects",
     "category": "Compositor",
     "allowMultiple": false,
-    "defaultSection": "right"
+    "defaultSection": "right",
+    "defaults": {
+      "density": "normal",
+      "fontSize": "normal",
+      "accent": "theme",
+      "showAccent": true,
+      "showHeaderInfo": true
+    },
+    "schema": [
+      {
+        "key": "density",
+        "type": "enum",
+        "label": "Density",
+        "options": [
+          "compact",
+          "normal",
+          "comfortable"
+        ],
+        "defaultValue": "normal",
+        "description": "How tightly the panel is laid out."
+      },
+      {
+        "key": "fontSize",
+        "type": "enum",
+        "label": "Font size",
+        "options": [
+          "small",
+          "normal",
+          "large"
+        ],
+        "defaultValue": "normal",
+        "description": "Text size, on top of the density's own scaling."
+      },
+      {
+        "key": "accent",
+        "type": "enum",
+        "label": "Accent colour",
+        "options": [
+          "theme",
+          "blue",
+          "cyan",
+          "green",
+          "magenta",
+          "yellow",
+          "red",
+          "orange"
+        ],
+        "defaultValue": "theme",
+        "description": "The colour the panel highlights with: the theme's accent, or a colour from its palette."
+      },
+      {
+        "key": "showAccent",
+        "type": "boolean",
+        "label": "Accent colours",
+        "defaultValue": true
+      },
+      {
+        "key": "showHeaderInfo",
+        "type": "boolean",
+        "label": "Show the version and GitHub link in the header",
+        "defaultValue": true
+      }
+    ]
   }
 }

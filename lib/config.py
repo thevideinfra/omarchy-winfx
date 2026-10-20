@@ -14,6 +14,7 @@ import tempfile
 import time
 
 PLUGIN_ID = 'videinfra.omarchy-effects'
+TARGET_HYPRLAND = '0.56.2'
 MARKER = '-- omarchy-effects managed loader'
 DEFAULTS = {'enabled': False, 'effect': 'crumble', 'duration': 450, 'size': 'medium'}
 EFFECTS = ('crumble', 'shatter', 'dissolve', 'pixelate', 'default')
@@ -109,8 +110,8 @@ def probe():
 
 def require_backend():
     data = probe()
-    if data['version'] != '0.56.2':
-        raise RuntimeError('Requires running Hyprland 0.56.2; detected ' + (data['version'] or 'no compositor') + '.')
+    if data['version'] != TARGET_HYPRLAND:
+        raise RuntimeError('Requires running Hyprland ' + TARGET_HYPRLAND + '; detected ' + (data['version'] or 'no compositor') + '.')
     if not data['backend']:
         raise RuntimeError('HyprWindowShade is not loaded. Run install.sh --backend, then reopen this panel.')
 
@@ -284,7 +285,8 @@ def status(ctx):
     result = probe()
     result['settings'] = read_settings(ctx)
     result['installed'] = ctx.hypr.exists() and loader(ctx) in ctx.hypr.read_text()
-    result['ready'] = result['version'] == '0.56.2' and result['backend'] and result['installed']
+    result['target'] = TARGET_HYPRLAND
+    result['ready'] = result['version'] == TARGET_HYPRLAND and result['backend'] and result['installed']
     return result
 
 

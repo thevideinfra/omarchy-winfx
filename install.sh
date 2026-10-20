@@ -16,11 +16,13 @@ done
 [[ -f $HOME/.config/hypr/hyprland.lua && -f $HOME/.config/omarchy/shell.json ]] || {
   echo 'Requires Omarchy 4 with hyprland.lua and shell.json.' >&2; exit 1;
 }
-python3 - <<'PY'
+python3 - "$SRC/lib" <<'PY'
 import json, subprocess, sys
+sys.path.insert(0, sys.argv[1])
+from config import TARGET_HYPRLAND
 v = json.loads(subprocess.check_output(['hyprctl', '-j', 'version']))
-if str(v.get('tag', '')).removeprefix('v') != '0.56.2':
-    sys.exit('This release targets Hyprland 0.56.2. Nothing installed.')
+if str(v.get('tag', '')).removeprefix('v') != TARGET_HYPRLAND:
+    sys.exit(f'This release targets Hyprland {TARGET_HYPRLAND}. Nothing installed.')
 errors = json.loads(subprocess.check_output(['hyprctl', '-j', 'configerrors']))
 errors = [error for error in errors if error.strip()]
 if errors:
@@ -56,7 +58,7 @@ if [[ $SRC != "$DEST" ]]; then
     cp -a -- "$DEST" "$BACKUP"
   fi
   mkdir -p "$DEST"
-  cp -a "$SRC/manifest.json" "$SRC/Panel.qml" "$SRC/bin" "$SRC/lib" "$SRC/shaders" \
+  cp -a "$SRC/manifest.json" "$SRC/Panel.qml" "$SRC/Model.js" "$SRC/AccentSource.qml" "$SRC/bin" "$SRC/lib" "$SRC/shaders" \
     "$SRC/install.sh" "$SRC/uninstall.sh" "$SRC/README.md" "$SRC/LICENSE" "$DEST/"
 fi
 "$DEST/bin/omarchy-effects" install
