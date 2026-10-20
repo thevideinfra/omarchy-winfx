@@ -86,7 +86,7 @@ Panel {
     || pDuration !== saved.duration || pSize !== saved.size
   // A fresh `omarchy plugin add` has no loader or backend behind it. Offer to
   // install them instead of showing controls that cannot work yet.
-  readonly property bool needsSetup: loaded && !ready && !saved.enabled
+  readonly property bool needsSetup: loaded && (!installed || (!ready && !saved.enabled))
   readonly property bool canInstall: needsSetup && versionOk
   readonly property bool controlsEnabled: loaded && !busy && !reader.running
   readonly property bool canApply: loaded && dirty && !busy && !reader.running
