@@ -65,5 +65,5 @@ fi
 omarchy restart shell
 printf '\nomarchy-effects installed, initially disabled. Open its bar panel, choose an effect, switch ON and Apply.\n'
 if (( ! backend )); then
-  printf 'If the panel reports a missing backend, run: %q --backend\n' "$DEST/install.sh"
+  printf 'If the panel reports a missing backend, click Build backend or run: %q --backend\n' "$DEST/install.sh"
 fi

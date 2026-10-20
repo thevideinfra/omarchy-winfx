@@ -69,6 +69,10 @@ Panel {
   property bool ready: false
   property bool loaded: false
   property bool busy: false
+  property bool installed: false
+  property bool backendLoaded: false
+  property bool versionOk: true
+  readonly property string installScript: decodeURIComponent(Qt.resolvedUrl("install.sh").toString().replace(/^file:\/\//, ""))
   property string errorText: ""
   property string backendText: "Checking backend…"
   readonly property var effects: [
@@ -80,6 +84,10 @@ Panel {
   ]
   readonly property bool dirty: pEnabled !== saved.enabled || pEffect !== saved.effect
     || pDuration !== saved.duration || pSize !== saved.size
+  // A fresh `omarchy plugin add` has no loader or backend behind it. Offer to
+  // install them instead of showing controls that cannot work yet.
+  readonly property bool needsSetup: loaded && !ready && !saved.enabled
+  readonly property bool canInstall: needsSetup && versionOk
   readonly property bool controlsEnabled: loaded && !busy && !reader.running
   readonly property bool canApply: loaded && dirty && !busy && !reader.running
     && (!pEnabled || pEffect === "default" || ready)
@@ -94,6 +102,15 @@ Panel {
     writer.command = [helper, "apply", JSON.stringify(staged())]
     writer.running = true
   }
+  // install.sh asks for sudo and shows hyprpm's output, so it runs in a
+  // terminal that stays open until a key is pressed.
+  function runInstall() {
+    var args = [installScript]
+    if (!backendLoaded) args.push("--backend")
+    Quickshell.execDetached(["omarchy-launch-tui", "--app-id=org.omarchy.omarchy-effects-install", "bash", "-c",
+      "\"$@\"; code=$?; echo; read -r -n 1 -p 'Press any key to close'; exit $code", "install"].concat(args))
+    close()
+  }
   function selectEffect(delta) {
     var index = effects.findIndex(function(e) { return e.key === pEffect })
     pEffect = effects[(index + delta + effects.length) % effects.length].key
@@ -103,6 +120,7 @@ Panel {
     return ""
   }
   onOpenedChanged: if (opened) { errorText = ""; settingsOpen = false; reload() }
+  Component.onCompleted: reload()
 
   Process {
     id: reader
@@ -115,8 +133,11 @@ Panel {
           root.saved = result.settings
           root.stage(result.settings)
           root.ready = result.ready
+          root.installed = result.installed
+          root.backendLoaded = result.backend
+          root.versionOk = result.version === result.target
           root.loaded = true
-          root.backendText = !result.installed ? "Run install.sh to finish setup"
+          root.backendText = !result.installed ? "Not installed yet"
             : result.version !== result.target ? "Requires Hyprland " + result.target
             : !result.backend ? "HyprWindowShade is not loaded"
             : "HyprWindowShade · ready"
@@ -153,7 +174,7 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     text: "▦"
-    tooltipText: "omarchy-effects · window closing effects"
+    tooltipText: root.needsSetup ? "omarchy-effects · click to set up" : "omarchy-effects · window closing effects"
     onPressed: function(b) { root.toggle() }
   }
 
@@ -347,11 +368,53 @@ Panel {
           }
         }
 
+        // First run: nothing is installed yet, so offer to set it up.
+        Column {
+          width: parent.width
+          spacing: root.sp(14)
+          visible: !root.settingsOpen && root.needsSetup
+
+          PanelSeparator { foreground: root.bar.foreground }
+
+          Text {
+            width: parent.width
+            textFormat: Text.PlainText
+            text: root.canInstall
+              ? "Closing effects need a Hyprland loader and the HyprWindowShade backend. Install opens a terminal that sets up what is missing."
+              : root.backendText
+            color: root.bar.foreground
+            opacity: 0.75
+            wrapMode: Text.WordWrap
+            font.family: root.bar.fontFamily
+            font.pixelSize: root.fontBody
+          }
+
+          Text {
+            width: parent.width
+            visible: root.canInstall
+            textFormat: Text.PlainText
+            text: root.backendText
+            color: root.bar.foreground
+            opacity: 0.55
+            wrapMode: Text.WordWrap
+            font.family: root.bar.fontFamily
+            font.pixelSize: root.fontCaption
+          }
+
+          ActionButton {
+            width: parent.width
+            visible: root.canInstall
+            text: root.installed ? "Build backend" : "Install"
+            primary: true
+            onClicked: root.runInstall()
+          }
+        }
+
         // Everything below the header; the gear swaps it for the settings view.
         Column {
           width: parent.width
           spacing: root.sp(14)
-          visible: !root.settingsOpen
+          visible: !root.settingsOpen && !root.needsSetup
 
           PanelSeparator { foreground: root.bar.foreground }
 

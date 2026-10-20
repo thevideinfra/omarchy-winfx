@@ -16,26 +16,25 @@ hyprpm. Offscreen shader checks are described in `docs/VALIDATION.md`.
 
 ```bash
 omarchy plugin add https://github.com/thevideinfra/omarchy-effects.git --enable --yes
-~/.config/omarchy/plugins/videinfra.omarchy-effects/install.sh --backend
 ```
 
-The first line installs the bar widget. `install.sh` writes one marked Lua loader
-into `hyprland.lua` and restarts the shell. It leaves effects **disabled**. Run it
-**as your desktop user**.
+The widget appears in the bar. Open it and click **Install**. A terminal opens and
+runs `install.sh`: it writes one marked Lua loader into `hyprland.lua`, builds the
+backend if it is missing, restarts the shell and leaves effects **disabled**.
 
-The explicit `--backend` option checks for `base-devel`, `hyprpm`, `cmake`,
-`cpio`, `git` and `pkgconf`, and installs missing packages through pacman.
-It requests administrator authorization through `sudo` in a terminal or
-`pkexec` otherwise. Declined or failed package installation stops setup.
-It then installs/builds/enables
+The backend step checks for `base-devel`, `hyprpm`, `cmake`, `cpio`, `git` and
+`pkgconf`, and installs missing packages through pacman. It asks for administrator
+authorization through `sudo` in the terminal. Declined or failed package
+installation stops setup. It then installs/builds/enables
 [HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade). hyprpm may request
 permission to prepare matching headers. Review its output; the installer never
-forces a plugin load or upgrades Hyprland. If your backend is already loaded, run
-`install.sh` without `--backend`.
+forces a plugin load or upgrades Hyprland. The same steps run from a shell with
+`~/.config/omarchy/plugins/videinfra.omarchy-effects/install.sh --backend`
+(without `--backend` if the backend is already loaded).
 
-Open the grid icon, select Crumble, switch **ON**, then **Apply**. Choose
-**Test window** and press any key inside the window to close it. Tests use applied
-settings; apply any pending edits first.
+Then select Crumble, switch **ON**, and **Apply**. Choose **Test window** and press
+any key inside the window to close it. Tests use applied settings; apply any pending
+edits first.
 
 ## Controls
 
