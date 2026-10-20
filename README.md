@@ -15,11 +15,14 @@ Extract the archive and run these commands **as your desktop user**:
 
 ```bash
 cd omarchy-effects
-sudo pacman -S --needed base-devel hyprpm cmake cpio git pkgconf
 ./install.sh --backend
 ```
 
-The explicit `--backend` option installs/builds/enables
+The explicit `--backend` option checks for `base-devel`, `hyprpm`, `cmake`,
+`cpio`, `git` and `pkgconf`, and installs missing packages through pacman.
+It requests administrator authorization through `sudo` in a terminal or
+`pkexec` otherwise. Declined or failed package installation stops setup.
+It then installs/builds/enables
 [HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade). hyprpm may request
 permission to prepare matching headers. Review its output; the installer never
 forces a plugin load or upgrades Hyprland. If your backend is already loaded:

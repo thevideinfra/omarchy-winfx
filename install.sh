@@ -27,11 +27,18 @@ if errors:
     sys.exit('Fix existing Hyprland configuration errors before installing: ' + str(errors))
 PY
 if (( backend )); then
-  command -v hyprpm >/dev/null || {
-    echo 'Install backend build tools first:' >&2
-    echo '  sudo pacman -S --needed base-devel hyprpm cmake cpio git pkgconf' >&2
-    exit 1
-  }
+  missing=()
+  for package in base-devel hyprpm cmake cpio git pkgconf; do
+    pacman -Q "$package" >/dev/null 2>&1 || missing+=("$package")
+  done
+  if (( ${#missing[@]} )); then
+    echo "Installing missing backend build tools: ${missing[*]}"
+    if [[ -t 0 && -t 1 ]]; then
+      sudo pacman -S --needed "${missing[@]}"
+    else
+      pkexec pacman -S --needed "${missing[@]}"
+    fi
+  fi
   echo 'Building HyprWindowShade for your running compositor with hyprpm…'
   # hyprpm owns header matching and upstream commit pins. Never force-load a .so.
   hyprpm update
