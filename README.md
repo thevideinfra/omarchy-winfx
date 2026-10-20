@@ -1,6 +1,6 @@
 # omarchy-effects
 
-Window-close effects for Omarchy. Crumble, Shatter, Dissolve and Pixelate, picked from a panel that follows your theme.
+Window open and close effects for Omarchy. Crumble, Shatter, Dissolve and Pixelate, picked from a panel that follows your theme.
 
 <p>
   <img src="docs/previews/panel.png" alt="The omarchy-effects panel with its version and GitHub link in the header: the four effects and the default animation, duration, fragment size, backend status and the Test window, Reset and Apply buttons" width="360">
@@ -42,7 +42,9 @@ edits first.
   Dissolve removes fine blocks; Pixelate enlarges blocks before fading.
 - **Duration:** 150–1500 ms, ±50ms buttons and 250/450/750ms presets.
 - **Fragment size:** Small / Medium / Large; also controls dissolve/pixel blocks.
-- **OFF or Default:** restores the pre-existing close animation.
+- **Animate:** Closing, Opening or Both. Opening plays the chosen effect in
+  reverse: the window starts broken up and assembles itself.
+- **OFF or Default:** restores the pre-existing open and close animations.
 - **Reset:** stages disabled, Crumble, 450ms, medium. Apply commits it.
 - **Keyboard:** arrows or h/j/k/l select; Return applies; Escape closes.
 
@@ -63,9 +65,10 @@ snapshot after the application actually closes, including the close button,
 keyboard shortcut and application exit. Unsaved-document prompts remain normal.
 No screenshots are stored. Opening, movement and workspace animations are untouched.
 
-The plugin sets a **fallback** close shader; explicit per-application close-shader
+The plugin sets **fallback** close and open shaders; explicit per-application shader
 rules take priority. It doesn't animate layer surfaces (bar, launcher, popups).
-Hyprland animations must be enabled so a close snapshot exists. Fullscreen,
+Opening runs on top of Hyprland's own open animation, so a strong `windowsIn`
+fade or popin can mask part of it. Hyprland animations must be enabled so a close snapshot exists. Fullscreen,
 rotated/scaled monitors, NVIDIA and multiple simultaneous closes need live testing.
 Fragment travel is limited and may clip at monitor edges. Shatter uses rotating
 rectangular pieces, not a physics simulation or irregular glass mesh.

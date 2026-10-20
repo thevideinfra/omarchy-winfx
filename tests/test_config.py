@@ -62,6 +62,31 @@ class ConfigTests(unittest.TestCase):
         self.assertIn('shader_close_default:', result)
         self.assertIn('@0.650', result)
 
+    def test_when_selects_close_open_or_both_rules(self):
+        for when, close, opened in [('close', True, False), ('open', False, True), ('both', True, True)]:
+            with self.subTest(when=when):
+                result = c.render_lua({**c.DEFAULTS, 'enabled':True, 'when':when}, self.ctx)
+                self.assertEqual('shader_close_default:' in result, close)
+                self.assertEqual('shader_open_default:' in result, opened)
+                self.assertEqual(result.count('hl.window_rule'), close + opened)
+
+    def test_opening_plays_the_effect_in_reverse(self):
+        for effect in ['crumble', 'shatter', 'dissolve', 'pixelate']:
+            with self.subTest(effect=effect):
+                value = {**c.DEFAULTS, 'effect':effect}
+                closing = c.shader_source(self.ctx, value)
+                opening = c.shader_source(self.ctx, value, opening=True)
+                self.assertIn('clamp(progress,0.0,1.0)', closing)
+                self.assertIn('clamp(1.0-progress,0.0,1.0)', opening)
+                self.assertNotEqual(c.shader_path(self.ctx, value), c.shader_path(self.ctx, value, True))
+
+    def test_settings_file_without_when_gets_the_default(self):
+        self.ctx.state.mkdir(parents=True, exist_ok=True)
+        self.ctx.settings.write_text(json.dumps({k: v for k, v in c.DEFAULTS.items() if k != 'when'}))
+        self.assertEqual(c.read_settings(self.ctx)['when'], 'close')
+        with self.assertRaises(ValueError):
+            c.validate({**c.DEFAULTS, 'when': 'never'})
+
     def test_install_is_idempotent_preserves_unrelated(self):
         c.integrate(self.ctx)
         c.integrate(self.ctx)

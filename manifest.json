@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "videinfra.omarchy-effects",
   "name": "omarchy-effects",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "thevideinfra",
   "license": "MIT",
-  "description": "Theme-native window closing effects: crumble, shatter, dissolve and pixelate",
+  "description": "Theme-native window open and close effects: crumble, shatter, dissolve and pixelate",
   "kinds": [
     "bar-widget"
   ],
@@ -14,7 +14,7 @@
   },
   "barWidget": {
     "displayName": "omarchy-effects",
-    "description": "Choose and preview window closing effects",
+    "description": "Choose and preview window open and close effects",
     "category": "Compositor",
     "allowMultiple": false,
     "defaultSection": "right",

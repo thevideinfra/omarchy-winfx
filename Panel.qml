@@ -60,11 +60,12 @@ Panel {
   }
 
   // ---- Effect settings (the helper's own file; they drive the compositor) ----
-  readonly property var defaults: ({ enabled: false, effect: "crumble", duration: 450, size: "medium" })
+  readonly property var defaults: ({ enabled: false, effect: "crumble", duration: 450, size: "medium", when: "close" })
   property bool pEnabled: false
   property string pEffect: "crumble"
   property int pDuration: 450
   property string pSize: "medium"
+  property string pWhen: "close"
   property var saved: defaults
   property bool ready: false
   property bool loaded: false
@@ -80,10 +81,10 @@ Panel {
     { key: "shatter", title: "Shatter", glyph: "✦", detail: "Fragments scatter outward and turn." },
     { key: "dissolve", title: "Dissolve", glyph: "⋯", detail: "Fine blocks dissolve in a noise pattern." },
     { key: "pixelate", title: "Pixelate", glyph: "▩", detail: "Growing blocks fade into the desktop." },
-    { key: "default", title: "Default", glyph: "−", detail: "Use your existing Omarchy closing animation." }
+    { key: "default", title: "Default", glyph: "−", detail: "Use your existing Omarchy window animations." }
   ]
   readonly property bool dirty: pEnabled !== saved.enabled || pEffect !== saved.effect
-    || pDuration !== saved.duration || pSize !== saved.size
+    || pDuration !== saved.duration || pSize !== saved.size || pWhen !== saved.when
   // A fresh `omarchy plugin add` has no loader or backend behind it. Offer to
   // install them instead of showing controls that cannot work yet.
   readonly property bool needsSetup: loaded && (!installed || (!ready && !saved.enabled))
@@ -92,8 +93,8 @@ Panel {
   readonly property bool canApply: loaded && dirty && !busy && !reader.running
     && (!pEnabled || pEffect === "default" || ready)
 
-  function staged() { return { enabled: pEnabled, effect: pEffect, duration: pDuration, size: pSize } }
-  function stage(s) { pEnabled = s.enabled; pEffect = s.effect; pDuration = s.duration; pSize = s.size }
+  function staged() { return { enabled: pEnabled, effect: pEffect, duration: pDuration, size: pSize, when: pWhen } }
+  function stage(s) { pEnabled = s.enabled; pEffect = s.effect; pDuration = s.duration; pSize = s.size; pWhen = s.when }
   function reload() { if (!reader.running) reader.running = true }
   function apply() {
     if (!canApply) return
@@ -174,7 +175,7 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     text: "▦"
-    tooltipText: root.needsSetup ? "omarchy-effects · click to set up" : "omarchy-effects · window closing effects"
+    tooltipText: root.needsSetup ? "omarchy-effects · click to set up" : "omarchy-effects · window effects"
     onPressed: function(b) { root.toggle() }
   }
 
@@ -358,7 +359,7 @@ Panel {
             Text {
               width: parent.width
               textFormat: Text.PlainText
-              text: "Window closing effects"
+              text: "Window open and close effects"
               color: root.bar.foreground
               opacity: 0.55
               font.family: root.bar.fontFamily
@@ -380,7 +381,7 @@ Panel {
             width: parent.width
             textFormat: Text.PlainText
             text: root.canInstall
-              ? "Closing effects need a Hyprland loader and the HyprWindowShade backend. Install opens a terminal that sets up what is missing."
+              ? "Window effects need a Hyprland loader and the HyprWindowShade backend. Install opens a terminal that sets up what is missing."
               : root.backendText
             color: root.bar.foreground
             opacity: 0.75
@@ -460,6 +461,30 @@ Panel {
           }
 
           PanelSeparator { foreground: root.bar.foreground }
+
+          Column {
+            width: parent.width
+            spacing: root.sp(8)
+            enabled: root.controlsEnabled && root.pEffect !== "default"
+            opacity: enabled ? 1 : 0.4
+
+            SectionLabel {
+              icon: "\uf021"
+              text: "ANIMATE"
+            }
+
+            Segmented {
+              width: parent.width
+              columns: 3
+              choices: [
+                { value: "close", label: "Closing" },
+                { value: "open", label: "Opening" },
+                { value: "both", label: "Both" }
+              ]
+              selected: root.pWhen
+              onPicked: function(value) { root.pWhen = value }
+            }
+          }
 
           Column {
             width: parent.width
