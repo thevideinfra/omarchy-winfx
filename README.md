@@ -1,22 +1,27 @@
 # omarchy-effects
 
-Window-close effects for **Omarchy 4.0.5 / Hyprland 0.56.2**.
-A native, theme-following Quickshell panel with Crumble, Shatter, Dissolve,
-Pixelate and the default Omarchy animation.
+Window-close effects for Omarchy. Crumble, Shatter, Dissolve and Pixelate, picked from a panel that follows your theme.
 
-**Status: initial release candidate.** Configuration tests and offscreen shader
-checks are described in `docs/VALIDATION.md`. Live Omarchy integration still
-requires target-machine testing. The HyprWindowShade backend is third-party
-experimental compositor code, built against your running Hyprland by hyprpm.
+<p>
+  <img src="docs/previews/panel.png" alt="The omarchy-effects panel with its version and GitHub link in the header: the four effects and the default animation, duration, fragment size, backend status and the Test window, Reset and Apply buttons" width="360">
+</p>
+
+![Actual shaders rendered on a synthetic window](docs/previews/effects.gif)
+
+Targets **Omarchy 4.0.5 / Hyprland 0.56.2**. The HyprWindowShade backend is
+third-party experimental compositor code, built against your running Hyprland by
+hyprpm. Offscreen shader checks are described in `docs/VALIDATION.md`.
 
 ## Install
 
-Extract the archive and run these commands **as your desktop user**:
-
 ```bash
-cd omarchy-effects
-./install.sh --backend
+omarchy plugin add https://github.com/thevideinfra/omarchy-effects.git --enable --yes
+~/.config/omarchy/plugins/videinfra.omarchy-effects/install.sh --backend
 ```
+
+The first line installs the bar widget. `install.sh` writes one marked Lua loader
+into `hyprland.lua` and restarts the shell. It leaves effects **disabled**. Run it
+**as your desktop user**.
 
 The explicit `--backend` option checks for `base-devel`, `hyprpm`, `cmake`,
 `cpio`, `git` and `pkgconf`, and installs missing packages through pacman.
@@ -25,22 +30,12 @@ It requests administrator authorization through `sudo` in a terminal or
 It then installs/builds/enables
 [HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade). hyprpm may request
 permission to prepare matching headers. Review its output; the installer never
-forces a plugin load or upgrades Hyprland. If your backend is already loaded:
+forces a plugin load or upgrades Hyprland. If your backend is already loaded, run
+`install.sh` without `--backend`.
 
-```bash
-./install.sh
-```
-
-Installation adds the bar widget, writes one marked Lua loader, restarts the
-shell and leaves effects **disabled**. Open the grid icon, select Crumble, switch
-**ON**, then **Apply**. Choose **Test window** and press any key inside the window
-to close it. Tests use applied settings; apply any pending edits first.
-
-## Previews
-
-![Panel rendered with a sample theme and shell interface stubs](docs/previews/panel.png)
-
-![Actual shaders rendered on a synthetic window](docs/previews/effects.gif)
+Open the grid icon, select Crumble, switch **ON**, then **Apply**. Choose
+**Test window** and press any key inside the window to close it. Tests use applied
+settings; apply any pending edits first.
 
 ## Controls
 
@@ -51,6 +46,12 @@ to close it. Tests use applied settings; apply any pending edits first.
 - **OFF or Default:** restores the pre-existing close animation.
 - **Reset:** stages disabled, Crumble, 450ms, medium. Apply commits it.
 - **Keyboard:** arrows or h/j/k/l select; Return applies; Escape closes.
+
+- **Make it yours.** The ⚙ in the panel header opens its settings: a
+  **Compact**, **Normal** or **Comfortable** layout, a **Small**, **Normal** or
+  **Large** font size, an accent colour (the theme's own, or any colour from its
+  palette) and a switch for the version and GitHub link. They are stored in
+  `shell.json` and also appear under `omarchy bar set videinfra.omarchy-effects`.
 
 The panel follows the shell's current theme colours, font, border and scaling.
 There is no background polling process. The preview uses `foot` and `bash`,

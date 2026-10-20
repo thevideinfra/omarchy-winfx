@@ -18,8 +18,7 @@ Target: Omarchy 4.0.5, Hyprland 0.56.2. This is a source release candidate.
   Quickshell/Omarchy interfaces. Zero lint diagnostics with those stubs. This
   checks QML syntax and layout, not live shell imports, IPC or focus behaviour.
 
-`previews/panel.png` is the actual QML rendered with a sample theme and interface
-stubs. `previews/effects.gif` renders the actual shaders on a synthetic window.
+`previews/panel.png` is a screenshot of the panel running in the Omarchy shell. `previews/effects.gif` renders the actual shaders on a synthetic window.
 Neither is a recording from a running Omarchy desktop.
 
 ## Must still be checked on the target desktop

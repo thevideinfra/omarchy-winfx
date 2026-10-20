@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import os
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -32,10 +33,11 @@ class ConfigTests(unittest.TestCase):
                     c.reload_checked()
 
     def test_installer_preflight_ignores_blank_errors_but_rejects_real_errors(self):
-        script = (self.ctx.plugin / 'install.sh').read_text().split("python3 - <<'PY'\n", 1)[1].split('\nPY\n', 1)[0]
+        script = (self.ctx.plugin / 'install.sh').read_text().split("python3 - \"$SRC/lib\" <<'PY'\n", 1)[1].split('\nPY\n', 1)[0]
         for errors in [[], [''], [' ', '\n'], ['', 'invalid rule']]:
             responses = [json.dumps({'tag': 'v0.56.2'}).encode(), json.dumps(errors).encode()]
-            with self.subTest(errors=errors), patch('subprocess.check_output', side_effect=responses):
+            with self.subTest(errors=errors), patch('subprocess.check_output', side_effect=responses), \
+                    patch.object(sys, 'argv', ['-', str(self.ctx.plugin / 'lib')]):
                 if 'invalid rule' in errors:
                     with self.assertRaisesRegex(SystemExit, 'invalid rule'):
                         exec(script, {})
