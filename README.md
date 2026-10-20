@@ -3,7 +3,7 @@
 Window open and close effects for Omarchy. Crumble, Shatter, Dissolve and Pixelate, picked from a panel that follows your theme.
 
 <p>
-  <img src="docs/previews/panel.png" alt="The omarchy-effects panel with its version and GitHub link in the header: the four effects and the default animation, duration, fragment size, backend status and the Test window, Reset and Apply buttons" width="360">
+  <img src="docs/previews/panel.png" alt="The omarchy-effects panel with its version and GitHub link in the header: the Animate row with its sync switch, eight effects and the default animation, duration, fragment size, backend status and the Test, Reset and Apply buttons" width="360">
 </p>
 
 ![Actual shaders rendered on a synthetic window](docs/previews/effects.gif)
