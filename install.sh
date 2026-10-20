@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SRC="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DEST="$HOME/.config/omarchy/plugins/videinfra.omarchy-effects"
+backend=0
+case "${1:-}" in
+  --backend) backend=1 ;;
+  '') ;;
+  *) echo 'Usage: ./install.sh [--backend]' >&2; exit 2 ;;
+esac
+[[ $# -le 1 ]] || { echo 'Too many arguments' >&2; exit 2; }
+[[ $(id -u) -ne 0 ]] || { echo 'Run as your desktop user, not root.' >&2; exit 1; }
+for tool in python3 hyprctl omarchy; do
+  command -v "$tool" >/dev/null || { echo "Missing dependency: $tool" >&2; exit 1; }
+done
+[[ -f $HOME/.config/hypr/hyprland.lua && -f $HOME/.config/omarchy/shell.json ]] || {
+  echo 'Requires Omarchy 4 with hyprland.lua and shell.json.' >&2; exit 1;
+}
+python3 - <<'PY'
+import json, subprocess, sys
+v = json.loads(subprocess.check_output(['hyprctl', '-j', 'version']))
+if str(v.get('tag', '')).removeprefix('v') != '0.56.2':
+    sys.exit('This release targets Hyprland 0.56.2. Nothing installed.')
+errors = json.loads(subprocess.check_output(['hyprctl', '-j', 'configerrors']))
+if errors:
+    sys.exit('Fix existing Hyprland configuration errors before installing: ' + str(errors))
+PY
+if (( backend )); then
+  command -v hyprpm >/dev/null || {
+    echo 'Install backend build tools first:' >&2
+    echo '  sudo pacman -S --needed base-devel hyprpm cmake cpio git pkgconf' >&2
+    exit 1
+  }
+  echo 'Building HyprWindowShade for your running compositor with hyprpm…'
+  # hyprpm owns header matching and upstream commit pins. Never force-load a .so.
+  hyprpm update
+  if ! hyprpm list | grep -Fq 'HyprWindowShade'; then
+    hyprpm add https://github.com/ManofJELLO/HyprWindowShade
+  fi
+  hyprpm enable HyprWindowShade
+  hyprpm reload -n
+fi
+if [[ $SRC != "$DEST" ]]; then
+  [[ ! -L $DEST ]] || { echo 'Refusing to replace a symlinked plugin directory.' >&2; exit 1; }
+  if [[ -e $DEST ]]; then
+    BACKUP="$HOME/.config/omarchy-effects/backups/plugin.$(date +%s%N)"
+    mkdir -p "$(dirname -- "$BACKUP")"
+    cp -a -- "$DEST" "$BACKUP"
+  fi
+  mkdir -p "$DEST"
+  cp -a "$SRC/manifest.json" "$SRC/Panel.qml" "$SRC/bin" "$SRC/lib" "$SRC/shaders" \
+    "$SRC/install.sh" "$SRC/uninstall.sh" "$SRC/README.md" "$SRC/LICENSE" "$DEST/"
+fi
+"$DEST/bin/omarchy-effects" install
+omarchy restart shell
+printf '\nomarchy-effects installed, initially disabled. Open its bar panel, choose an effect, switch ON and Apply.\n'
+if (( ! backend )); then
+  printf 'If the panel reports a missing backend, run: %q --backend\n' "$DEST/install.sh"
+fi
