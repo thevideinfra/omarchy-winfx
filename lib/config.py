@@ -152,6 +152,7 @@ def render_lua(value, ctx):
 def reload_checked():
     run(['hyprctl', 'reload'])
     errors = json.loads(run(['hyprctl', '-j', 'configerrors']))
+    errors = [error for error in errors if error.strip()]
     if errors:
         raise RuntimeError('Hyprland configuration error: ' + str(errors))
 

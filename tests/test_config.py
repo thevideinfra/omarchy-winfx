@@ -22,6 +22,26 @@ class ConfigTests(unittest.TestCase):
         self.original = {'bar': {'layout': {'left': [{'id':'keep.me'}], 'right': []}}, 'unrelated': 42}
         self.ctx.shell.write_text(json.dumps(self.original))
 
+    def test_reload_ignores_blank_errors_but_rejects_real_errors(self):
+        for errors in [[], [''], [' ', '\n'], ['', 'invalid rule']]:
+            with self.subTest(errors=errors), patch.object(c, 'run', side_effect=['ok', json.dumps(errors)]):
+                if 'invalid rule' in errors:
+                    with self.assertRaisesRegex(RuntimeError, 'invalid rule'):
+                        c.reload_checked()
+                else:
+                    c.reload_checked()
+
+    def test_installer_preflight_ignores_blank_errors_but_rejects_real_errors(self):
+        script = (self.ctx.plugin / 'install.sh').read_text().split("python3 - <<'PY'\n", 1)[1].split('\nPY\n', 1)[0]
+        for errors in [[], [''], [' ', '\n'], ['', 'invalid rule']]:
+            responses = [json.dumps({'tag': 'v0.56.2'}).encode(), json.dumps(errors).encode()]
+            with self.subTest(errors=errors), patch('subprocess.check_output', side_effect=responses):
+                if 'invalid rule' in errors:
+                    with self.assertRaisesRegex(SystemExit, 'invalid rule'):
+                        exec(script, {})
+                else:
+                    exec(script, {})
+
     def test_strict_validation(self):
         self.assertEqual(c.validate(c.DEFAULTS), c.DEFAULTS)
         for change in [{'duration':True}, {'duration':149}, {'duration':1501},

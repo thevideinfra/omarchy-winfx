@@ -22,6 +22,7 @@ v = json.loads(subprocess.check_output(['hyprctl', '-j', 'version']))
 if str(v.get('tag', '')).removeprefix('v') != '0.56.2':
     sys.exit('This release targets Hyprland 0.56.2. Nothing installed.')
 errors = json.loads(subprocess.check_output(['hyprctl', '-j', 'configerrors']))
+errors = [error for error in errors if error.strip()]
 if errors:
     sys.exit('Fix existing Hyprland configuration errors before installing: ' + str(errors))
 PY
