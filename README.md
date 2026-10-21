@@ -3,7 +3,7 @@
 Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Ten effects, picked from a panel that follows your theme.
 
 <p>
-  <img src="docs/previews/panel.png" alt="The WinFX panel: the Animate row with its sync switch, ten effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="295">
+  <img src="docs/previews/panel.png" alt="The WinFX panel: the Animate row with its sync switch, ten effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="306">
 </p>
 
 ![The ten effects closing, rendered from the shipped shaders on a synthetic window](docs/previews/effects.gif)
