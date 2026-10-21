@@ -23,7 +23,14 @@
       "fontSize": "normal",
       "accent": "theme",
       "showAccent": true,
-      "showHeaderInfo": true
+      "showHeaderInfo": true,
+      "barIcon": "FX",
+      "dimWhenOff": true,
+      "rightClickToggle": false,
+      "showSubtitle": true,
+      "showDescription": true,
+      "showStatus": true,
+      "showHints": true
     },
     "schema": [
       {
@@ -77,6 +84,57 @@
         "key": "showHeaderInfo",
         "type": "boolean",
         "label": "Show the version and GitHub link in the header",
+        "defaultValue": true
+      },
+      {
+        "key": "barIcon",
+        "type": "enum",
+        "label": "Bar icon",
+        "options": [
+          "FX",
+          "fx",
+          "WFX",
+          "wfx",
+          "✦",
+          "▦"
+        ],
+        "defaultValue": "FX",
+        "description": "The icon the widget shows in the bar and in the panel header."
+      },
+      {
+        "key": "dimWhenOff",
+        "type": "boolean",
+        "label": "Dim the bar icon while effects are off",
+        "defaultValue": true
+      },
+      {
+        "key": "rightClickToggle",
+        "type": "boolean",
+        "label": "Right-click the bar icon to switch effects on or off",
+        "defaultValue": false
+      },
+      {
+        "key": "showSubtitle",
+        "type": "boolean",
+        "label": "Show the subtitle under the name",
+        "defaultValue": true
+      },
+      {
+        "key": "showDescription",
+        "type": "boolean",
+        "label": "Show the effect description",
+        "defaultValue": true
+      },
+      {
+        "key": "showStatus",
+        "type": "boolean",
+        "label": "Show the backend status line",
+        "defaultValue": true
+      },
+      {
+        "key": "showHints",
+        "type": "boolean",
+        "label": "Show the key hints",
         "defaultValue": true
       }
     ]

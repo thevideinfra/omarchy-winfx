@@ -24,6 +24,18 @@ Panel {
   readonly property bool showAccent: Model.settingBool(setting("showAccent", true), true)
   readonly property string accentChoice: String(setting("accent", "theme"))
   readonly property bool showHeaderInfo: Model.settingBool(setting("showHeaderInfo", true), true)
+  readonly property bool showSubtitle: Model.settingBool(setting("showSubtitle", true), true)
+  readonly property bool showDescription: Model.settingBool(setting("showDescription", true), true)
+  readonly property bool showStatus: Model.settingBool(setting("showStatus", true), true)
+  readonly property bool showHints: Model.settingBool(setting("showHints", true), true)
+  readonly property bool dimWhenOff: Model.settingBool(setting("dimWhenOff", true), true)
+  readonly property bool rightClickToggle: Model.settingBool(setting("rightClickToggle", false), false)
+  // The bar icon (and the panel header's): letters or a glyph, chosen in settings.
+  readonly property var iconChoices: ["FX", "fx", "WFX", "wfx", "✦", "▦"]
+  readonly property string barIcon: {
+    var chosen = String(setting("barIcon", "FX"))
+    return iconChoices.indexOf(chosen) >= 0 ? chosen : "FX"
+  }
   property bool settingsOpen: false
 
   // The version shown in the header comes from this plugin's manifest, so it
@@ -168,6 +180,18 @@ Panel {
       "\"$@\"; code=$?; echo; read -r -n 1 -p 'Press any key to close'; exit $code", "install"].concat(args))
     close()
   }
+  // Right-click on the bar icon: flip the saved on/off state right away.
+  function toggleNow() {
+    if (!loaded || busy || !installed || reader.running) return
+    var next = JSON.parse(JSON.stringify(saved))
+    next.enabled = !next.enabled
+    var needs = next.enabled && [next.effect, next.sync ? next.effect : next.openEffect].some(function(e) { return e !== "default" })
+    if (needs && !ready) return
+    busy = true
+    errorText = ""
+    writer.command = [helper, "apply", JSON.stringify(next)]
+    writer.running = true
+  }
   function selectEffect(delta) {
     var index = effects.findIndex(function(e) { return e.key === curEffect })
     setCur("effect", effects[(index + delta + effects.length) % effects.length].key)
@@ -230,9 +254,14 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: "▦"
+    text: root.barIcon
+    // Dimmed while effects are off, so the bar shows the state at a glance.
+    opacity: root.dimWhenOff && root.loaded && !root.saved.enabled ? 0.5 : 1
     tooltipText: root.needsSetup ? "WinFX · click to set up" : "WinFX · window effects"
-    onPressed: function(b) { root.toggle() }
+    onPressed: function(b) {
+      if (b === Qt.RightButton && root.rightClickToggle) root.toggleNow()
+      else root.toggle()
+    }
   }
 
   KeyboardPanel {
@@ -272,10 +301,11 @@ Panel {
           Text {
             id: heroIcon
             textFormat: Text.PlainText
-            text: "▦"
+            text: root.barIcon
             color: root.accent
             font.family: root.bar.fontFamily
-            font.pixelSize: root.fontDisplay
+            font.pixelSize: root.barIcon.length > 1 ? root.fontTitle : root.fontDisplay
+            font.bold: root.barIcon.length > 1
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
           }
@@ -414,6 +444,7 @@ Panel {
 
             Text {
               width: parent.width
+              visible: root.showSubtitle
               textFormat: Text.PlainText
               text: "Window open and close effects"
               color: root.bar.foreground
@@ -488,7 +519,7 @@ Panel {
 
             SettingSwitch {
               width: parent.width
-              label: "Same effect both ways"
+              label: "Sync open/close"
               checked: root.pSync
               onToggled: root.setSync(!root.pSync)
             }
@@ -538,6 +569,7 @@ Panel {
 
             Text {
               width: parent.width
+              visible: root.showDescription
               textFormat: Text.PlainText
               text: root.description()
               color: root.bar.foreground
@@ -609,6 +641,7 @@ Panel {
 
           Row {
             width: parent.width
+            visible: root.showStatus
             spacing: root.sp(7)
 
             Rectangle {
@@ -673,6 +706,7 @@ Panel {
 
           Text {
             width: parent.width
+            visible: root.showHints
             textFormat: Text.PlainText
             text: root.dirty ? "Apply changes before opening a test window." : "↑ ↓ choose  ·  Enter apply  ·  Esc close"
             color: root.bar.foreground
@@ -778,15 +812,78 @@ Panel {
     PanelSeparator { foreground: root.bar.foreground }
 
     SectionLabel {
-      icon: ""
-      text: "SHOW"
+      icon: "\uf2d0"
+      text: "BAR ICON"
+    }
+
+    Segmented {
+      width: parent.width
+      columns: 3
+      choices: root.iconChoices.map(function(c) { return { value: c, label: c } })
+      selected: root.barIcon
+      onPicked: function(value) { root.setSetting("barIcon", value) }
     }
 
     SettingSwitch {
       width: parent.width
-      label: "Version & GitHub link"
-      checked: root.showHeaderInfo
-      onToggled: root.setSetting("showHeaderInfo", !root.showHeaderInfo)
+      label: "Dim the icon while effects are off"
+      checked: root.dimWhenOff
+      onToggled: root.setSetting("dimWhenOff", !root.dimWhenOff)
+    }
+
+    SettingSwitch {
+      width: parent.width
+      label: "Right-click the icon to toggle"
+      checked: root.rightClickToggle
+      onToggled: root.setSetting("rightClickToggle", !root.rightClickToggle)
+    }
+
+    PanelSeparator { foreground: root.bar.foreground }
+
+    SectionLabel {
+      icon: "\uf06e"
+      text: "SHOW"
+    }
+
+    // The switches sit closer together than the view's sections.
+    Column {
+      width: parent.width
+      spacing: root.sp(6)
+
+      SettingSwitch {
+        width: parent.width
+        label: "Version & GitHub link"
+        checked: root.showHeaderInfo
+        onToggled: root.setSetting("showHeaderInfo", !root.showHeaderInfo)
+      }
+
+      SettingSwitch {
+        width: parent.width
+        label: "Subtitle under the name"
+        checked: root.showSubtitle
+        onToggled: root.setSetting("showSubtitle", !root.showSubtitle)
+      }
+
+      SettingSwitch {
+        width: parent.width
+        label: "Effect description"
+        checked: root.showDescription
+        onToggled: root.setSetting("showDescription", !root.showDescription)
+      }
+
+      SettingSwitch {
+        width: parent.width
+        label: "Backend status"
+        checked: root.showStatus
+        onToggled: root.setSetting("showStatus", !root.showStatus)
+      }
+
+      SettingSwitch {
+        width: parent.width
+        label: "Key hints"
+        checked: root.showHints
+        onToggled: root.setSetting("showHints", !root.showHints)
+      }
     }
   }
 
