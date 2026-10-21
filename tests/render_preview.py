@@ -19,7 +19,7 @@ W, H = 440, 300
 BOX = (46, 34, 394, 266)
 # (effect, progress, caption): chosen so each is easy to recognise in a still.
 TILES = [('shatter', 0.50, 'Shatter'), ('explode', 0.30, 'Explode'), ('matrix', 0.45, 'Matrix'),
-         ('tv', 0.42, 'TV'), ('glitch', 0.60, 'Glitch'), ('build', 0.55, 'Build')]
+         ('blinds', 0.50, 'Blinds'), ('glitch', 0.60, 'Glitch'), ('build', 0.55, 'Build')]
 GREEN, TEXT, MUTED = '#5fd7a0', '#e8eaf6', '#9aa5c9'
 
 
@@ -124,7 +124,7 @@ def main():
         strong, soft = line
         d.text((left + 2, y), strong, font=body, fill=TEXT)
         if soft:
-            d.text((left + 2 + d.textlength(strong, font=body), y), soft, font=body, fill=MUTED)
+            d.text((left + 2 + d.textlength(strong, font=body), y), soft, font=body, fill=TEXT)
         y += 31
 
     tile_w, tile_h = 244, 166
