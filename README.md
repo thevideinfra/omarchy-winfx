@@ -53,7 +53,9 @@ backend if it is missing, restarts the shell and leaves effects **disabled**.
 The backend step checks for `base-devel`, `hyprpm`, `cmake`, `cpio`, `git` and
 `pkgconf`, and installs missing packages through pacman. It asks for administrator
 authorization through `sudo` in the terminal, and declined or failed package
-installation stops setup. It then installs, builds and enables HyprWindowShade.
+installation stops setup. On a fresh system `hyprpm` itself may be missing (it is its own
+Arch package). The installer installs it too, but if pacman reports a target not found,
+run `omarchy update` (or `sudo pacman -Syu`) first and click Install again. It then installs, builds and enables HyprWindowShade.
 hyprpm may ask permission to prepare matching headers. Review its output: the
 installer never forces a plugin load or upgrades Hyprland. The same steps run from a
 shell with `~/.config/omarchy/plugins/videinfra.omarchy-winfx/install.sh --backend`
