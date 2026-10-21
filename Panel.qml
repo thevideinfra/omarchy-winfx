@@ -488,7 +488,7 @@ Panel {
 
             SettingSwitch {
               width: parent.width
-              label: "Same effect for opening and closing"
+              label: "Same effect both ways"
               checked: root.pSync
               onToggled: root.setSync(!root.pSync)
             }

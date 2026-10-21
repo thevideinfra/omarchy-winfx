@@ -15,7 +15,7 @@ Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Te
   rain).
 - **Opening and closing.** Opening plays an effect in reverse, so Build assembles a
   window from the bottom up and Explode pulls its chunks together.
-- **Separate or synced.** Turn **Same effect for opening and closing** on to use one
+- **Separate or synced.** Turn **Same effect both ways** on to use one
   effect, duration and fragment size for both. Turn it off and the Closing and Opening
   tabs each keep their own. Both always apply together when you click Apply.
 - **Keep Omarchy's animation on one side.** Choose Default for opening or closing
