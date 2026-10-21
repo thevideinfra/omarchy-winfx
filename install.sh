@@ -28,19 +28,29 @@ errors = [error for error in errors if error.strip()]
 if errors:
     sys.exit('Fix existing Hyprland configuration errors before installing: ' + str(errors))
 PY
+# hyprpm is its own package on current Arch but ships inside hyprland on older
+# snapshots, so test for the binary rather than for a package of that name.
+has_hyprpm() { command -v hyprpm >/dev/null; }
 if (( backend )); then
   missing=()
-  for package in base-devel hyprpm cmake cpio git pkgconf; do
+  for package in base-devel cmake cpio git pkgconf; do
     pacman -Q "$package" >/dev/null 2>&1 || missing+=("$package")
   done
+  has_hyprpm || missing+=(hyprpm)
   if (( ${#missing[@]} )); then
     echo "Installing missing backend build tools: ${missing[*]}"
     if [[ -t 0 && -t 1 ]]; then
-      sudo pacman -S --needed "${missing[@]}"
+      sudo pacman -S --needed "${missing[@]}" || fail=1
     else
-      pkexec pacman -S --needed "${missing[@]}"
+      pkexec pacman -S --needed "${missing[@]}" || fail=1
+    fi
+    if [[ ${fail:-0} == 1 ]]; then
+      echo 'Installing the build tools failed. If pacman says a target was not found, the package' >&2
+      echo 'database may be stale: run `sudo pacman -Syu`, then click Install again.' >&2
+      exit 1
     fi
   fi
+  has_hyprpm || { echo 'hyprpm is still missing after installing; it comes with Hyprland.' >&2; exit 1; }
   echo 'Building HyprWindowShade for your running compositor with hyprpm…'
   # hyprpm owns header matching and upstream commit pins. Never force-load a .so.
   hyprpm update
