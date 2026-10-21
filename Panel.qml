@@ -919,7 +919,7 @@ Panel {
 
       Rectangle {
         x: 0
-        y: Math.round(icon.size * 0.25)
+        y: Math.round(icon.size * 0.22)
         width: parent.width
         height: icon.stroke
         color: icon.color
@@ -927,12 +927,12 @@ Panel {
 
       Text {
         anchors.horizontalCenter: parent.horizontalCenter
-        y: Math.round(icon.size * 0.25) + (parent.height - Math.round(icon.size * 0.25) - height) / 2
+        y: Math.round(icon.size * 0.22) + (parent.height - Math.round(icon.size * 0.22) - height) / 2
         textFormat: Text.PlainText
         text: "fx"
         color: icon.color
         font.family: root.bar.fontFamily
-        font.pixelSize: Math.round(icon.size * 0.52)
+        font.pixelSize: Math.round(icon.size * 0.62)
         font.bold: true
       }
     }
