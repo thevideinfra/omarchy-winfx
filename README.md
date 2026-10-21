@@ -3,12 +3,14 @@
 Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Ten effects, picked from a panel that follows your theme.
 
 <p>
-  <img src="docs/previews/panel.png" alt="The WinFX panel: the sync switch with its Closing and Opening tabs, ten effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="296">
+  <img src="docs/previews/effects.gif" alt="The ten effects closing, rendered from the shipped shaders on a synthetic window" width="900">
 </p>
 
-![The ten effects closing, rendered from the shipped shaders on a synthetic window](docs/previews/effects.gif)
-
 *Closing, rendered from the shipped shaders on a synthetic window. Opening plays each effect in reverse.*
+
+<p>
+  <img src="docs/previews/panel.png" alt="The WinFX panel: the sync switch with its Closing and Opening tabs, ten effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="296">
+</p>
 
 - **Ten effects.** Crumble, Shatter (jagged glass shards), Dissolve, Pixelate,
   Explode, Build, Blinds, Glitch, TV (an old set switching off) and Matrix (digital

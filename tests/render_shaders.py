@@ -59,18 +59,26 @@ def program(fragment):
     return prog
 
 
+def load_font(size):
+    candidates = subprocess.run(['fc-match','-f','%{file}','sans'],capture_output=True,text=True).stdout.split('\n')[:1] + ['/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf']
+    for candidate in candidates:
+        try: return ImageFont.truetype(candidate,size)
+        except OSError: pass
+    return ImageFont.load_default()
+
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--output',type=Path,default=Path('/tmp/omarchy-winfx-frames'))
     args=parser.parse_args(); args.output.mkdir(parents=True,exist_ok=True)
     w,h=360,240; context(w,h)
     window=Image.new('RGBA',(w,h)); draw=ImageDraw.Draw(window)
-    box=(72,48,287,191)
-    draw.rounded_rectangle(box,6,fill='#1b2030',outline='#7aa2f7',width=2)
-    draw.rectangle((74,68,285,70),fill='#424b66')
-    draw.text((84,53),'WinFX',fill='#c0caf5')
-    for i in range(5):
-        draw.rectangle((88,87+i*17,245-i*12,93+i*17),fill=['#7aa2f7','#9ece6a','#bb9af7'][i%3])
+    box=(18,22,342,218)
+    draw.rounded_rectangle(box,8,fill='#1b2030',outline='#7aa2f7',width=2)
+    draw.rectangle((box[0]+2,box[1]+26,box[2]-2,box[1]+28),fill='#424b66')
+    draw.text((box[0]+14,box[1]+5),'WinFX',font=load_font(15),fill='#c0caf5')
+    for i in range(6):
+        draw.rectangle((box[0]+16,box[1]+44+i*24,box[2]-70-i*24,box[1]+52+i*24),fill=['#7aa2f7','#9ece6a','#bb9af7'][i%3])
     tex=U(); gl('glGenTextures',None,I,C.POINTER(U))(1,C.byref(tex))
     gl('glBindTexture',None,U,U)(0x0DE1,tex.value)
     for name, val in [(0x2801,0x2600),(0x2800,0x2600),(0x2802,0x812F),(0x2803,0x812F)]:
@@ -88,7 +96,7 @@ def main():
         gl('glUniform1i',None,I,I)(loc('tex'),0)
         gl('glUniform1f',None,I,F)(loc('seed'),0.37)
         gl('glUniform2f',None,I,F,F)(loc('surface_size'),w,h)
-        gl('glUniform4f',None,I,F,F,F,F)(loc('window_rect'),.2,.2,.6,.6)
+        gl('glUniform4f',None,I,F,F,F,F)(loc('window_rect'),box[0]/w,box[1]/h,(box[2]-box[0])/w,(box[3]-box[1])/h)
         images=[]
         for step in range(31):
             gl('glUniform1f',None,I,F)(loc('progress'),step/30)
@@ -105,21 +113,18 @@ def main():
         images[15].save(args.output/(path.stem+'.png'))
         frames[path.stem]=images
         print(path.name+': compiled, rendered 31 frames, endpoints and premultiplied alpha passed')
-    font=None
-    for candidate in subprocess.run(['fc-match','-f','%{file}','sans'],capture_output=True,text=True).stdout.split('\n')[:1] + ['/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf']:
-        try: font=ImageFont.truetype(candidate,16); break
-        except OSError: pass
-    font=font or ImageFont.load_default()
+    title_font,label_font=load_font(26),load_font(23)
     names=['crumble','shatter','dissolve','pixelate','explode','build','blinds','glitch','tv','matrix']
     columns=5; rows=(len(names)+columns-1)//columns
     combined=[]
+    top=58; row=h+44
     for step in [0]*10+list(range(31))+[30]*8:
-        panel=Image.new('RGB',(w*columns,45+rows*(h+42)),'#0f111a'); d=ImageDraw.Draw(panel)
-        d.text((16,12),'WinFX · closing, rendered from the shipped shaders on a synthetic window (opening plays them in reverse)',font=font,fill='#c0caf5')
+        panel=Image.new('RGB',(w*columns,top+rows*row),'#0f111a'); d=ImageDraw.Draw(panel)
+        d.text((18,14),'WinFX  ·  closing, rendered from the shipped shaders  ·  opening plays them in reverse',font=title_font,fill='#c0caf5')
         for i,name in enumerate(names):
-            x=(i%columns)*w; y=45+(i//columns)*(h+42)
-            d.text((x+16,y),'TV' if name=='tv' else name.capitalize(),font=font,fill='#7aa2f7')
-            panel.paste(frames[name][step],(x,y+22))
+            x=(i%columns)*w; y=top+(i//columns)*row
+            d.text((x+18,y),'TV' if name=='tv' else name.capitalize(),font=label_font,fill='#7aa2f7')
+            panel.paste(frames[name][step],(x,y+30))
         combined.append(panel.resize((panel.width*3//4,panel.height*3//4),Image.LANCZOS))
     combined[25].save(args.output/'effects.png')
     combined[0].save(args.output/'effects.gif',save_all=True,append_images=combined[1:],duration=30,loop=0,optimize=True)
