@@ -882,7 +882,7 @@ Panel {
     }
   }
 
-  // Section title in the tandem style: a dim icon, then the bold title, and an
+  // Section title: a dim icon, then the bold title, and an
   // optional hint on the trailing edge.
   component SectionLabel: Item {
     id: section
@@ -930,7 +930,7 @@ Panel {
     }
   }
 
-  // Equal-width choice boxes in a grid (tandem's style); the chosen one is
+  // Equal-width choice boxes in a grid; the chosen one is
   // tinted and outlined in the accent.
   component Segmented: Grid {
     id: segmented
