@@ -157,11 +157,13 @@ separators.
 python3 -m unittest discover -s tests -v
 bash -n install.sh uninstall.sh
 python3 tests/render_shaders.py --output /tmp/omarchy-winfx-frames
+python3 tests/render_preview.py --wallpaper wall.jpg --panel docs/previews/panel.png --output preview.png
 ```
 
 The optional shader renderer needs Mesa EGL with OpenGL ES 3.2 and Pillow. It
 compiles the shipped shaders, checks their endpoints and premultiplied alpha, and
-renders the comparison GIF. It does not test the compositor's snapshot integration.
+renders the comparison GIF. `render_preview.py` makes the 1280×720 `preview.png`
+for the plugin marketplace: effects caught mid-animation beside the panel. It does not test the compositor's snapshot integration.
 
 Backend API reference: HyprWindowShade commit
 `4414596c2fbb64cb5bb4aa7342900051338fed7a`, with upstream 0.56.2 compatibility pin
