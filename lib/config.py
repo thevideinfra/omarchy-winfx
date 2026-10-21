@@ -309,6 +309,17 @@ def backend_load(ctx):
         raise RuntimeError('Loading the backend failed: ' + output.strip())
 
 
+def backend_ensure_loaded(ctx):
+    """Load the backend, building it first when it is missing or was built for another Hyprland.
+    backend_build refuses unless the headers are the running compositor's, and backend_load
+    never loads a build that is not fresh, so a stale plugin cannot reach the compositor."""
+    if probe()['backend']:
+        return
+    if not backend_state(ctx, probe()['commit'])['fresh']:
+        backend_build(ctx)
+    backend_load(ctx)
+
+
 def ensure_backend_build(ctx):
     """Keep a current build on disk even when the backend came from somewhere else (an
     earlier hyprpm install), so it still loads at the next login. Never blocks an Apply."""
@@ -474,6 +485,9 @@ def status(ctx):
     result['installed'] = ctx.hypr.exists() and loader(ctx) in ctx.hypr.read_text()
     result['target'] = TARGET_HYPRLAND
     result.update(backend_state(ctx, result['commit']))
+    headers = header_commit()
+    result['headers'] = bool(headers) and headers == result['commit']
+    result['headerCommit'] = headers
     result['ready'] = result['version'] == TARGET_HYPRLAND and result['backend'] and result['installed']
     return result
 
@@ -496,12 +510,11 @@ def main():
         elif args.command == 'install':
             result = install(ctx)
         elif args.command == 'backend':
-            if not backend_state(ctx, probe()['commit'])['fresh']:
-                backend_build(ctx)
-            backend_load(ctx)
+            backend_ensure_loaded(ctx)
             result = {'backend': True}
         elif args.command == 'load':
-            backend_load(ctx)
+            # Runs at login: rebuilds after a Hyprland update, then loads.
+            backend_ensure_loaded(ctx)
             result = {'loaded': True}
         elif args.command == 'uninstall':
             uninstall(ctx)

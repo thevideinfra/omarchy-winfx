@@ -174,6 +174,33 @@ class ConfigTests(unittest.TestCase):
                 c.backend_load(self.ctx)
         run.assert_not_called()
 
+    def test_login_rebuilds_a_stale_backend_before_loading_it(self):
+        calls = []
+        states = iter([{'built': True, 'fresh': False}, {'built': True, 'fresh': True}])
+        with patch.object(c, 'probe', return_value={'version': c.TARGET_HYPRLAND, 'commit': 'new', 'backend': False}), \
+                patch.object(c, 'backend_state', side_effect=lambda *a: next(states)), \
+                patch.object(c, 'backend_build', side_effect=lambda ctx: calls.append('build')), \
+                patch.object(c, 'run', side_effect=lambda args, **k: calls.append(args[1:3]) or ''):
+            # run() is also how probe's second check would load; here the plugin reports loaded after the load call.
+            with patch.object(c, 'backend_load', side_effect=lambda ctx: calls.append('load')):
+                c.backend_ensure_loaded(self.ctx)
+        self.assertEqual(calls, ['build', 'load'])
+
+    def test_login_does_nothing_when_the_backend_is_already_loaded(self):
+        with patch.object(c, 'probe', return_value={'version': c.TARGET_HYPRLAND, 'commit': 'x', 'backend': True}), \
+                patch.object(c, 'backend_build') as build, patch.object(c, 'backend_load') as load:
+            c.backend_ensure_loaded(self.ctx)
+        build.assert_not_called()
+        load.assert_not_called()
+
+    def test_login_does_not_load_when_the_rebuild_is_refused(self):
+        with patch.object(c, 'probe', return_value={'version': c.TARGET_HYPRLAND, 'commit': 'new', 'backend': False}), \
+                patch.object(c, 'backend_build', side_effect=RuntimeError('headers do not match')), \
+                patch.object(c, 'backend_load') as load:
+            with self.assertRaisesRegex(RuntimeError, 'do not match'):
+                c.backend_ensure_loaded(self.ctx)
+        load.assert_not_called()
+
     def test_the_build_refuses_headers_that_do_not_match_the_running_compositor(self):
         with patch.object(c, 'probe', return_value={'version': c.TARGET_HYPRLAND, 'commit': 'running', 'backend': False}), \
                 patch.object(c, 'header_commit', return_value='headers'), patch.object(c, 'build_run') as build:

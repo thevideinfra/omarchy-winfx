@@ -65,7 +65,8 @@ if (( backend )); then
   echo 'Building HyprWindowShade against the installed Hyprland headers…'
   "$DEST/bin/omarchy-winfx" backend
 fi
-omarchy restart shell
+# The panel runs this itself and re-reads its state, so it sets WINFX_NO_RESTART.
+[[ -n ${WINFX_NO_RESTART:-} ]] || omarchy restart shell
 printf '\nWinFX installed, initially disabled. Open its bar panel, choose an effect, switch ON and Apply.\n'
 if (( ! backend )); then
   printf 'If the panel reports a missing backend, click Build backend or run: %q --backend\n' "$DEST/install.sh"

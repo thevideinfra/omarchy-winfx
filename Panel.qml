@@ -93,6 +93,7 @@ Panel {
   property bool backendLoaded: false
   property bool backendBuilt: false
   property bool backendFresh: false
+  property bool headersOk: true
   property bool versionOk: true
   readonly property string installScript: decodeURIComponent(Qt.resolvedUrl("install.sh").toString().replace(/^file:\/\//, ""))
   property string errorText: ""
@@ -144,7 +145,7 @@ Panel {
   // A fresh `omarchy plugin add` has no loader or backend behind it. Offer to
   // install them instead of showing controls that cannot work yet.
   readonly property bool needsSetup: loaded && (!installed || (!ready && !saved.enabled))
-  readonly property bool canInstall: needsSetup && versionOk
+  readonly property bool canInstall: needsSetup && versionOk && headersOk
   readonly property bool controlsEnabled: loaded && !busy && !reader.running
   readonly property bool canApply: loaded && dirty && !busy && !reader.running && (!needsBackend || ready)
 
@@ -171,14 +172,15 @@ Panel {
     writer.command = [helper, "apply", JSON.stringify(staged())]
     writer.running = true
   }
-  // install.sh may ask for sudo and shows the build's output, so it runs in a
-  // terminal that stays open until a key is pressed.
+  // Setup runs right here: it takes about ten seconds and rarely needs a password;
+  // when a build tool is missing the installer asks through a graphical prompt.
   function runInstall() {
+    if (setup.running) return
+    errorText = ""
     var args = [installScript]
     if (!backendLoaded) args.push("--backend")
-    Quickshell.execDetached(["omarchy-launch-tui", "--app-id=org.omarchy.omarchy-winfx-install", "bash", "-c",
-      "\"$@\"; code=$?; echo; read -r -n 1 -p 'Press any key to close'; exit $code", "install"].concat(args))
-    close()
+    setup.command = args
+    setup.running = true
   }
   // Right-click on the bar icon: flip the saved on/off state right away.
   function toggleNow() {
@@ -218,10 +220,13 @@ Panel {
           root.backendLoaded = result.backend
           root.backendBuilt = result.built
           root.backendFresh = result.fresh
+          root.headersOk = result.headers
           root.versionOk = result.version === result.target
           root.loaded = true
           root.backendText = !result.installed ? "Not installed yet"
             : result.version !== result.target ? "Requires Hyprland " + result.target
+            : !result.backend && !result.headers ? (result.headerCommit === "" ? "Hyprland's headers are missing: reinstall the hyprland package"
+              : "Restart Hyprland to finish its update")
             : !result.backend ? (!result.built ? "HyprWindowShade is not built yet"
               : !result.fresh ? "The backend needs a rebuild for this Hyprland"
               : "HyprWindowShade is built but not loaded")
@@ -242,6 +247,20 @@ Panel {
       root.busy = false
       if (code === 0) root.reload()
       else root.errorText = writeError.text.trim() || "Could not apply settings"
+    }
+  }
+
+  Process {
+    id: setup
+    // The panel re-reads its own state when this ends, so the shell need not restart.
+    environment: ({ WINFX_NO_RESTART: "1" })
+    stderr: StdioCollector { id: setupError; waitForEnd: true }
+    onExited: function(code) {
+      if (code !== 0) {
+        var lines = setupError.text.trim().split("\n")
+        root.errorText = lines.slice(-4).join("\n") || "Setup failed"
+      }
+      root.reload()
     }
   }
 
@@ -499,7 +518,7 @@ Panel {
             width: parent.width
             textFormat: Text.PlainText
             text: root.canInstall
-              ? "Window effects need a Hyprland loader and the HyprWindowShade backend. Install opens a terminal that sets up what is missing."
+              ? "WinFX adds one line to your Hyprland config so it loads at login, then builds its effects backend. That takes about ten seconds; if a build tool is missing it asks for your password."
               : root.backendText
             color: root.bar.foreground
             opacity: 0.75
@@ -512,7 +531,7 @@ Panel {
             width: parent.width
             visible: root.canInstall
             textFormat: Text.PlainText
-            text: root.backendText
+            text: setup.running ? "Setting up… building the backend takes about ten seconds" : root.backendText
             color: root.bar.foreground
             opacity: 0.55
             wrapMode: Text.WordWrap
@@ -523,9 +542,21 @@ Panel {
           ActionButton {
             width: parent.width
             visible: root.canInstall
-            text: !root.installed ? "Install" : !root.backendBuilt ? "Build backend" : !root.backendFresh ? "Rebuild backend" : "Load backend"
-            primary: true
+            enabled: !setup.running
+            text: setup.running ? "Setting up…" : !root.installed ? "Set up" : !root.backendBuilt ? "Build backend" : !root.backendFresh ? "Rebuild backend" : "Load backend"
+            primary: !setup.running
             onClicked: root.runInstall()
+          }
+
+          Text {
+            width: parent.width
+            visible: root.errorText !== ""
+            textFormat: Text.PlainText
+            text: root.errorText
+            color: root.bar.foreground
+            wrapMode: Text.WrapAnywhere
+            font.family: root.bar.fontFamily
+            font.pixelSize: root.fontCaption
           }
         }
 
