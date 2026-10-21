@@ -3,7 +3,7 @@
 Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Eight effects, picked from a panel that follows your theme.
 
 <p>
-  <img src="docs/previews/panel.png" alt="The WinFX panel: the Animate row with its sync switch, eight effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="306">
+  <img src="docs/previews/panel.png" alt="The WinFX panel: the Animate row with its sync switch, eight effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="295">
 </p>
 
 ![The eight effects closing, rendered from the shipped shaders on a synthetic window](docs/previews/effects.gif)
@@ -26,10 +26,14 @@ Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Ei
   palette) and a switch for the version and GitHub link. They are stored in
   `shell.json` and also appear under `omarchy bar set videinfra.omarchy-winfx`.
 
-Targets **Omarchy 4.0.5 / Hyprland 0.56.2**. The effects run on the
-[HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade) plugin, which is
-third-party experimental compositor code built against your running Hyprland by
+**Credit:** WinFX is a panel, installer and set of shaders on top of
+[HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade) by
+[ManofJELLO](https://github.com/ManofJELLO). It does the real work of shading open
+and close animations inside Hyprland, and none of this would exist without it. It is
+third-party experimental compositor code, built against your running Hyprland by
 hyprpm.
+
+Targets **Omarchy 4.0.5 / Hyprland 0.56.2**.
 
 ## Install
 
