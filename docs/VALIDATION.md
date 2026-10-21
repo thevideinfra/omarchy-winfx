@@ -15,6 +15,9 @@ Target: Omarchy 4.0.5, Hyprland 0.56.2.
   (`tests/render_shaders.py`). Each renders 31 frames against a synthetic
   monitor-sized texture with a smaller window sub-rectangle. Starting pixels match the
   original exactly, final alpha is zero, and premultiplied colour never exceeds alpha.
+- Clean installs on fresh Omarchy VMs: add the plugin from the GitHub URL, click Install
+  (no `sudo` prompt when `base-devel`, `pkgconf` and `git` are present), the backend builds
+  and loads from `~/.config/omarchy-winfx/backend/`, and an effect applies.
 - Live on one Omarchy 4.0.5 / Hyprland 0.56.2 session: install from the panel,
   applying every effect, opening and closing windows in Alacritty with the effects
   captured frame by frame, the panel at each density and font size, and migration
