@@ -17,6 +17,10 @@ class ConfigTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.home = Path(self.tmp.name)
         self.ctx = c.Context(self.home, Path(__file__).parents[1])
+        # Applying must never build the backend (clone, compile) from a test.
+        patcher = patch.object(c, 'ensure_backend_build')
+        self.ensure_build = patcher.start()
+        self.addCleanup(patcher.stop)
         self.ctx.hypr.parent.mkdir(parents=True)
         self.ctx.hypr.write_text('-- user settings\n')
         self.ctx.shell.parent.mkdir(parents=True)
@@ -135,6 +139,53 @@ class ConfigTests(unittest.TestCase):
                 self.assertNotIn('when', value)
         with self.assertRaises(ValueError):
             c.validate({**c.DEFAULTS, 'when': 'both'})
+
+    def test_startup_loads_the_backend_through_the_helper_not_hyprpm(self):
+        result = c.render_lua({**c.DEFAULTS, 'enabled':True}, self.ctx)
+        self.assertNotIn('hyprpm', result)
+        self.assertIn('omarchy-winfx', result.split('hyprland.start', 1)[1])
+        self.assertIn(' load', result)
+
+    def test_header_commit_is_read_from_version_h(self):
+        headers = self.home / 'inc'
+        (headers / 'src').mkdir(parents=True)
+        (headers / 'src/version.h').write_text('#define GIT_COMMIT_HASH    "abc123def"\n#define X 1\n')
+        self.assertEqual(c.header_commit(headers), 'abc123def')
+        self.assertEqual(c.header_commit(self.home / 'missing'), '')
+
+    def test_backend_is_fresh_only_for_the_pinned_source_and_the_running_commit(self):
+        self.assertEqual(c.backend_state(self.ctx, 'run1'), {'built': False, 'fresh': False})
+        self.ctx.backend.mkdir(parents=True)
+        self.ctx.backend_so.write_text('so')
+        self.ctx.backend_stamp.write_text(json.dumps({'source': c.BACKEND_COMMIT, 'hyprland': 'run1'}))
+        self.assertEqual(c.backend_state(self.ctx, 'run1'), {'built': True, 'fresh': True})
+        # A Hyprland update changes the running commit: the old build must not be trusted.
+        self.assertEqual(c.backend_state(self.ctx, 'run2'), {'built': True, 'fresh': False})
+        self.ctx.backend_stamp.write_text(json.dumps({'source': 'other', 'hyprland': 'run1'}))
+        self.assertFalse(c.backend_state(self.ctx, 'run1')['fresh'])
+
+    def test_a_stale_backend_is_never_loaded(self):
+        self.ctx.backend.mkdir(parents=True)
+        self.ctx.backend_so.write_text('so')
+        self.ctx.backend_stamp.write_text(json.dumps({'source': c.BACKEND_COMMIT, 'hyprland': 'old'}))
+        with patch.object(c, 'probe', return_value={'version': c.TARGET_HYPRLAND, 'commit': 'new', 'backend': False}), \
+                patch.object(c, 'run') as run:
+            with self.assertRaisesRegex(RuntimeError, 'needs building'):
+                c.backend_load(self.ctx)
+        run.assert_not_called()
+
+    def test_the_build_refuses_headers_that_do_not_match_the_running_compositor(self):
+        with patch.object(c, 'probe', return_value={'version': c.TARGET_HYPRLAND, 'commit': 'running', 'backend': False}), \
+                patch.object(c, 'header_commit', return_value='headers'), patch.object(c, 'build_run') as build:
+            with self.assertRaisesRegex(RuntimeError, 'do not match the running compositor'):
+                c.backend_build(self.ctx)
+        build.assert_not_called()
+
+    def test_the_pkg_config_file_points_at_the_system_headers(self):
+        pc = c.PC_TEMPLATE.format(version='0.56.2')
+        self.assertIn('prefix=/usr/include', pc)
+        self.assertIn('Version: 0.56.2', pc)
+        self.assertIn('-I${prefix}/hyprland/src', pc)
 
     def test_install_is_idempotent_preserves_unrelated(self):
         c.integrate(self.ctx)

@@ -35,8 +35,8 @@ Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Te
 [HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade) by
 [ManofJELLO](https://github.com/ManofJELLO). It does the real work of shading open
 and close animations inside Hyprland, and none of this would exist without it. It is
-third-party experimental compositor code, built against your running Hyprland by
-hyprpm.
+third-party experimental compositor code. WinFX builds it from source against the
+Hyprland headers your system already has.
 
 Targets **Omarchy 4.0.5 / Hyprland 0.56.2**.
 
@@ -50,15 +50,18 @@ The widget appears in the bar. Open it and click **Install**. A terminal opens a
 runs `install.sh`: it writes one marked Lua loader into `hyprland.lua`, builds the
 backend if it is missing, restarts the shell and leaves effects **disabled**.
 
-The backend step checks for `base-devel`, `hyprpm`, `cmake`, `cpio`, `git` and
-`pkgconf`, and installs missing packages through pacman. It asks for administrator
-authorization through `sudo` in the terminal, and declined or failed package
-installation stops setup. On a fresh system `hyprpm` itself may be missing (it is its own
-Arch package). The installer installs it too, but if pacman reports a target not found,
-run `omarchy update` (or `sudo pacman -Syu`) first and click Install again. It then installs, builds and enables HyprWindowShade.
-hyprpm may ask permission to prepare matching headers. Review its output: the
-installer never forces a plugin load or upgrades Hyprland. The same steps run from a
-shell with `~/.config/omarchy/plugins/videinfra.omarchy-winfx/install.sh --backend`
+The backend step builds HyprWindowShade at a pinned commit, with the Hyprland
+headers the `hyprland` package already installed. It needs only `base-devel`,
+`pkgconf` and `git`, which Omarchy normally has, so there is often no password prompt
+at all. If one of them is missing the installer installs it through pacman and asks for
+`sudo` once; declined or failed installation stops setup. It uses no `hyprpm`, does not
+clone Hyprland and adds nothing to hyprpm's repository list. The source and the built
+plugin live in `~/.config/omarchy-winfx/backend/` and the build takes about ten
+seconds. If pacman reports a target not found, run `omarchy update` (or
+`sudo pacman -Syu`) first and click Install again. The installer never forces a plugin
+load: it builds only when the installed headers match the running compositor, and it
+refuses to load a build made for a different Hyprland. The same steps run from a shell
+with `~/.config/omarchy/plugins/videinfra.omarchy-winfx/install.sh --backend`
 (without `--backend` if the backend is already loaded).
 
 ## Use
@@ -102,10 +105,10 @@ No screenshots are stored. Movement and workspace animations are untouched.
   several windows closing at once. See `docs/VALIDATION.md`.
 
 This release intentionally rejects other Hyprland versions. After an upgrade,
-leave effects disabled until compatibility has been checked. `hyprpm update`
-rebuilds shared plugins; a compositor restart may also be required after package
-updates. The installed version number alone is not proof of matching binary ABI;
-never bypass hyprpm's checks or force-load a `.so`.
+leave effects disabled until compatibility has been checked. After a Hyprland update,
+restart Hyprland, then open the WinFX panel: it shows "Rebuild backend" and builds a
+fresh copy. A plugin built for another Hyprland can crash the compositor, so WinFX
+never loads one whose build stamp does not match the running compositor.
 
 ## Files and recovery
 
@@ -114,6 +117,7 @@ never bypass hyprpm's checks or force-load a `.so`.
 - Generated shaders and rules: `~/.config/omarchy-winfx/shaders/close.glsl`,
   `open.glsl` and `active.lua`
 - Backups: `~/.config/omarchy-winfx/backups/`
+- Backend source, build and stamp: `~/.config/omarchy-winfx/backend/`
 - Integration: one line ending `-- omarchy-winfx managed loader` in
   `~/.config/hypr/hyprland.lua`, and one widget in `~/.config/omarchy/shell.json`.
 
@@ -124,9 +128,9 @@ atomic. No keybindings are changed.
 
 If startup is affected, remove the single line ending
 `-- omarchy-winfx managed loader` from `~/.config/hypr/hyprland.lua` from a TTY.
-This prevents the rule and its startup `hyprpm reload` callback from running.
-If you have another hyprpm startup hook, also run `hyprpm disable HyprWindowShade`
-before restarting the session. Do not delete unrelated configuration.
+This prevents the rule and its startup `omarchy-winfx load` callback from running.
+If you installed HyprWindowShade through hyprpm before, `hyprpm disable HyprWindowShade`
+stops hyprpm loading it too. Do not delete unrelated configuration.
 
 ## Uninstall
 
@@ -137,8 +141,8 @@ Run before deleting the plugin directory:
 ```
 
 It removes the loader, the bar entry and the installed plugin files, reloads
-Hyprland and restarts the shell. It keeps your settings, the backups and the shared
-HyprWindowShade backend. `omarchy plugin remove` alone cannot remove the Lua loader,
+Hyprland and restarts the shell. It unloads the backend and keeps your settings, the backups and the built
+backend files. `omarchy plugin remove` alone cannot remove the Lua loader,
 so use the script.
 
 ## CLI

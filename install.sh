@@ -28,15 +28,13 @@ errors = [error for error in errors if error.strip()]
 if errors:
     sys.exit('Fix existing Hyprland configuration errors before installing: ' + str(errors))
 PY
-# hyprpm is its own package on current Arch but ships inside hyprland on older
-# snapshots, so test for the binary rather than for a package of that name.
-has_hyprpm() { command -v hyprpm >/dev/null; }
 if (( backend )); then
+  # The backend is built from source against the headers the hyprland package already
+  # installed, so the only packages needed are the compiler, make, git and pkgconf.
   missing=()
-  for package in base-devel cmake cpio git pkgconf; do
+  for package in base-devel pkgconf git; do
     pacman -Q "$package" >/dev/null 2>&1 || missing+=("$package")
   done
-  has_hyprpm || missing+=(hyprpm)
   if (( ${#missing[@]} )); then
     echo "Installing missing backend build tools: ${missing[*]}"
     if [[ -t 0 && -t 1 ]]; then
@@ -50,15 +48,6 @@ if (( backend )); then
       exit 1
     fi
   fi
-  has_hyprpm || { echo 'hyprpm is still missing after installing; it comes with Hyprland.' >&2; exit 1; }
-  echo 'Building HyprWindowShade for your running compositor with hyprpm…'
-  # hyprpm owns header matching and upstream commit pins. Never force-load a .so.
-  hyprpm update
-  if ! hyprpm list | grep -Fq 'HyprWindowShade'; then
-    hyprpm add https://github.com/ManofJELLO/HyprWindowShade
-  fi
-  hyprpm enable HyprWindowShade
-  hyprpm reload -n
 fi
 if [[ $SRC != "$DEST" ]]; then
   [[ ! -L $DEST ]] || { echo 'Refusing to replace a symlinked plugin directory.' >&2; exit 1; }
@@ -72,6 +61,10 @@ if [[ $SRC != "$DEST" ]]; then
     "$SRC/install.sh" "$SRC/uninstall.sh" "$SRC/README.md" "$SRC/LICENSE" "$DEST/"
 fi
 "$DEST/bin/omarchy-winfx" install
+if (( backend )); then
+  echo 'Building HyprWindowShade against the installed Hyprland headers…'
+  "$DEST/bin/omarchy-winfx" backend
+fi
 omarchy restart shell
 printf '\nWinFX installed, initially disabled. Open its bar panel, choose an effect, switch ON and Apply.\n'
 if (( ! backend )); then

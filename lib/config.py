@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -15,6 +16,24 @@ import time
 PLUGIN_ID = 'videinfra.omarchy-winfx'
 TARGET_HYPRLAND = '0.56.2'
 MARKER = '-- omarchy-winfx managed loader'
+BACKEND_URL = 'https://github.com/ManofJELLO/HyprWindowShade'
+# The upstream's own pin: the plugin commit known to build against Hyprland TARGET_HYPRLAND.
+BACKEND_COMMIT = 'a4c6b8af424a189072427c4c90ef2938e1b481d3'
+HEADERS = Path('/usr/include/hyprland')
+# Arch's hyprland package ships the headers but no pkg-config file for them; the
+# plugin's Makefile asks pkg-config, so WinFX writes one that points at /usr/include.
+PC_TEMPLATE = '\n'.join([
+    'prefix=/usr/include',
+    '',
+    'Name: Hyprland',
+    'URL: https://github.com/hyprwm/Hyprland',
+    'Description: Hyprland header files',
+    'Version: {version}',
+    'Requires: aquamarine >= 0.9.3, hyprcursor >= 0.1.7, hyprgraphics >= 0.5.1, hyprlang >= 0.6.7, hyprutils >= 0.14.0, '
+    'libdrm, egl, cairo, xkbcommon >= 1.11.0, libinput >= 1.29, wayland-server >= 1.22.91, xcb, xcb-render, '
+    'xcb-xfixes, xcb-icccm, xcb-composite, xcb-res, xcb-errors',
+    'Cflags: -I${{prefix}} -I${{prefix}}/hyprland/protocols -I${{prefix}}/hyprland -I${{prefix}}/hyprland/src',
+    ''])
 # effect/duration/size belong to closing, the open* keys to opening. An effect of
 # 'default' leaves Omarchy's own animation in that direction. With sync on, opening
 # mirrors closing and the open* keys are rewritten to match on every Apply.
@@ -32,6 +51,9 @@ class Context:
         self.active = self.state / 'active.lua'
         self.hypr = self.home / '.config/hypr/hyprland.lua'
         self.shell = self.home / '.config/omarchy/shell.json'
+        self.backend = self.state / 'backend'
+        self.backend_so = self.backend / 'HyprWindowShade.so'
+        self.backend_stamp = self.backend / 'build.json'
 
 
 def side(value, opening=False):
@@ -136,10 +158,11 @@ def run(args, timeout=15):
 
 
 def probe():
-    result = {'version': '', 'backend': False, 'error': ''}
+    result = {'version': '', 'commit': '', 'backend': False, 'error': ''}
     try:
         data = json.loads(run(['hyprctl', '-j', 'version']))
         result['version'] = str(data.get('tag', '')).removeprefix('v')
+        result['commit'] = str(data.get('commit', ''))
         plugins = json.loads(run(['hyprctl', '-j', 'plugin', 'list']))
         result['backend'] = any(p.get('name') == 'HyprWindowShade' for p in plugins)
     except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired, AttributeError, TypeError) as error:
@@ -204,11 +227,103 @@ def render_lua(value, ctx):
     tags = shader_tags(ctx, value)
     if tags:
         lines += ['hl.on("hyprland.start", function()',
-                  '    hl.exec_cmd("hyprpm reload -n")', 'end)']
+                  '    hl.exec_cmd(' + lua_string(shlex.quote(str(ctx.plugin / 'bin/omarchy-winfx')) + ' load') + ')', 'end)']
         for name, tag in tags:
             lines += ['hl.window_rule({', f'    name = "{name}",', '    match = { class = ".*" },',
                       '    tag = ' + lua_string(tag) + ',', '})']
     return '\n'.join(lines) + '\n'
+
+
+def header_commit(headers=HEADERS):
+    try:
+        text = (headers / 'src/version.h').read_text()
+    except OSError:
+        return ''
+    match = re.search(r'GIT_COMMIT_HASH\s+"([0-9a-f]+)"', text)
+    return match.group(1) if match else ''
+
+
+def backend_state(ctx, running):
+    """built: a .so exists. fresh: it came from the pinned source, built against the running compositor's headers."""
+    try:
+        stamp = json.loads(ctx.backend_stamp.read_text())
+    except (OSError, ValueError):
+        stamp = {}
+    built = ctx.backend_so.exists() and bool(stamp)
+    return {'built': built, 'fresh': built and bool(running) and stamp.get('source') == BACKEND_COMMIT
+            and stamp.get('hyprland') == running}
+
+
+def build_run(args, **kwargs):
+    result = subprocess.run(args, text=True, capture_output=True, timeout=600, **kwargs)
+    if result.returncode:
+        tail = (result.stderr or result.stdout).strip().splitlines()[-12:]
+        raise RuntimeError(args[0] + ' failed:\n' + '\n'.join(tail))
+
+
+def backend_build(ctx):
+    """Build HyprWindowShade against the headers Arch installed with Hyprland. A plugin is
+    only safe to load when its headers are the running compositor's, so refuse otherwise."""
+    data = probe()
+    if data['version'] != TARGET_HYPRLAND:
+        raise RuntimeError('Requires running Hyprland ' + TARGET_HYPRLAND + '; detected ' + (data['version'] or 'no compositor') + '.')
+    headers = header_commit()
+    if not headers:
+        raise RuntimeError('Hyprland headers are missing from ' + str(HEADERS) + '. Install or reinstall the hyprland package.')
+    if headers != data['commit']:
+        raise RuntimeError('The installed Hyprland headers (' + headers[:9] + ') do not match the running compositor ('
+                           + data['commit'][:9] + '). Restart Hyprland after updating, then try again.')
+    if not shutil.which('git') or not shutil.which('make') or not shutil.which('g++'):
+        raise RuntimeError('Building needs git, make and g++ (the base-devel package).')
+    ctx.backend.mkdir(parents=True, exist_ok=True)
+    source = ctx.backend / 'src'
+    if not (source / '.git').exists():
+        build_run(['git', 'clone', '--quiet', BACKEND_URL, str(source)])
+    try:
+        build_run(['git', '-C', str(source), 'checkout', '--quiet', BACKEND_COMMIT])
+    except RuntimeError:
+        build_run(['git', '-C', str(source), 'fetch', '--quiet', 'origin'])
+        build_run(['git', '-C', str(source), 'checkout', '--quiet', BACKEND_COMMIT])
+    pkgconfig = ctx.backend / 'pc'
+    pkgconfig.mkdir(exist_ok=True)
+    atomic_write(pkgconfig / 'hyprland.pc', PC_TEMPLATE.format(version=data['version']))
+    artifact = ctx.backend / 'HyprWindowShade.so.build'
+    env = {**os.environ, 'PKG_CONFIG_PATH': str(pkgconfig)}
+    try:
+        build_run(['make', '-C', str(source), 'all', 'TARGET=' + str(artifact)], env=env)
+        os.replace(artifact, ctx.backend_so)
+    finally:
+        artifact.unlink(missing_ok=True)
+    atomic_write(ctx.backend_stamp, json.dumps({'source': BACKEND_COMMIT, 'hyprland': data['commit'],
+                                                'version': data['version']}, indent=2) + '\n')
+
+
+def backend_load(ctx):
+    data = probe()
+    if data['backend']:
+        return
+    if not backend_state(ctx, data['commit'])['fresh']:
+        raise RuntimeError('The WinFX backend needs building. Open the WinFX panel and click Install.')
+    output = run(['hyprctl', 'plugin', 'load', str(ctx.backend_so)], timeout=60)
+    if not probe()['backend']:
+        raise RuntimeError('Loading the backend failed: ' + output.strip())
+
+
+def ensure_backend_build(ctx):
+    """Keep a current build on disk even when the backend came from somewhere else (an
+    earlier hyprpm install), so it still loads at the next login. Never blocks an Apply."""
+    try:
+        if not backend_state(ctx, probe()['commit'])['fresh']:
+            backend_build(ctx)
+    except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired):
+        pass
+
+
+def backend_unload(ctx):
+    try:
+        run(['hyprctl', 'plugin', 'unload', str(ctx.backend_so)])
+    except (OSError, RuntimeError, subprocess.TimeoutExpired):
+        pass
 
 
 def reload_checked():
@@ -230,6 +345,7 @@ def apply(ctx, value):
     active = directions(value)
     if active:
         require_backend()
+        ensure_backend_build(ctx)
     lua = render_lua(value, ctx)
     shaders = {shader_path(ctx, value, opening): shader_source(ctx, value, opening)
                for opening, _, _ in active}
@@ -327,6 +443,7 @@ def install(ctx):
 
 
 def uninstall(ctx):
+    backend_unload(ctx)
     with locked(ctx):
         try:
             with transaction([ctx.hypr, ctx.shell]):
@@ -356,13 +473,14 @@ def status(ctx):
     result['settings'] = read_settings(ctx)
     result['installed'] = ctx.hypr.exists() and loader(ctx) in ctx.hypr.read_text()
     result['target'] = TARGET_HYPRLAND
+    result.update(backend_state(ctx, result['commit']))
     result['ready'] = result['version'] == TARGET_HYPRLAND and result['backend'] and result['installed']
     return result
 
 
 def main():
     parser = argparse.ArgumentParser(description='WinFX settings and integration')
-    parser.add_argument('command', choices=['status','apply','install','uninstall','preview'])
+    parser.add_argument('command', choices=['status','apply','install','uninstall','preview','backend','load'])
     parser.add_argument('settings', nargs='?', help='Complete JSON object for apply')
     args = parser.parse_args()
     ctx = Context()
@@ -377,6 +495,14 @@ def main():
             result = apply(ctx, json.loads(args.settings))
         elif args.command == 'install':
             result = install(ctx)
+        elif args.command == 'backend':
+            if not backend_state(ctx, probe()['commit'])['fresh']:
+                backend_build(ctx)
+            backend_load(ctx)
+            result = {'backend': True}
+        elif args.command == 'load':
+            backend_load(ctx)
+            result = {'loaded': True}
         elif args.command == 'uninstall':
             uninstall(ctx)
             result = {'removed': True}
@@ -387,6 +513,9 @@ def main():
         return 0
     except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
         print(str(error), file=sys.stderr)
+        if args.command == 'load' and shutil.which('notify-send'):
+            # At login nobody is watching a terminal.
+            subprocess.run(['notify-send', 'WinFX', str(error)], check=False)
         return 1
 
 if __name__ == '__main__':

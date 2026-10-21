@@ -7,4 +7,4 @@ DEST="$HOME/.config/omarchy/plugins/videinfra.omarchy-winfx"
 # The integration is removed and checked before deleting its installed code.
 if [[ -d $DEST && ! -L $DEST ]]; then rm -rf -- "$DEST"; fi
 omarchy restart shell
-printf 'WinFX removed. Settings/backups retained in ~/.config/omarchy-winfx. HyprWindowShade remains installed.\n'
+printf 'WinFX removed. Settings/backups retained in ~/.config/omarchy-winfx. The built backend stays in ~/.config/omarchy-winfx/backend.\n'

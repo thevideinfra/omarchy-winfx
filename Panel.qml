@@ -91,6 +91,8 @@ Panel {
   property bool busy: false
   property bool installed: false
   property bool backendLoaded: false
+  property bool backendBuilt: false
+  property bool backendFresh: false
   property bool versionOk: true
   readonly property string installScript: decodeURIComponent(Qt.resolvedUrl("install.sh").toString().replace(/^file:\/\//, ""))
   property string errorText: ""
@@ -169,7 +171,7 @@ Panel {
     writer.command = [helper, "apply", JSON.stringify(staged())]
     writer.running = true
   }
-  // install.sh asks for sudo and shows hyprpm's output, so it runs in a
+  // install.sh may ask for sudo and shows the build's output, so it runs in a
   // terminal that stays open until a key is pressed.
   function runInstall() {
     var args = [installScript]
@@ -214,11 +216,15 @@ Panel {
           root.ready = result.ready
           root.installed = result.installed
           root.backendLoaded = result.backend
+          root.backendBuilt = result.built
+          root.backendFresh = result.fresh
           root.versionOk = result.version === result.target
           root.loaded = true
           root.backendText = !result.installed ? "Not installed yet"
             : result.version !== result.target ? "Requires Hyprland " + result.target
-            : !result.backend ? "HyprWindowShade is not loaded"
+            : !result.backend ? (!result.built ? "HyprWindowShade is not built yet"
+              : !result.fresh ? "The backend needs a rebuild for this Hyprland"
+              : "HyprWindowShade is built but not loaded")
             : "HyprWindowShade · ready"
         } catch (e) { root.loaded = false; root.ready = false; root.errorText = "Could not read settings" }
       }
@@ -517,7 +523,7 @@ Panel {
           ActionButton {
             width: parent.width
             visible: root.canInstall
-            text: root.installed ? "Build backend" : "Install"
+            text: !root.installed ? "Install" : !root.backendBuilt ? "Build backend" : !root.backendFresh ? "Rebuild backend" : "Load backend"
             primary: true
             onClicked: root.runInstall()
           }
