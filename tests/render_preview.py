@@ -111,11 +111,11 @@ def main():
     left = 48
     d.text((left, 92), 'WinFX', font=font('Bold', 88), fill=TEXT)
     d.text((left + 2, 214), 'Open and close effects\nfor Omarchy windows', font=font('Regular', 24), fill=MUTED, spacing=10)
-    d.text((left + 2, 318), 'TEN EFFECTS', font=font('Bold', 20), fill=GREEN)
+    d.text((left + 2, 318), '10 EFFECTS', font=font('Bold', 20), fill=GREEN)
     body = font('Regular', 19)
-    lines = [('Shatter, Explode, Matrix,', ''), ('TV, Glitch, Build, Blinds', ''), None,
-             ('Opening ', 'plays them in reverse'), ('One effect, ', 'or one each way'),
-             ('Size, duration, accent', ''), ('from your theme', '')]
+    lines = [('Crumble, Shatter, Dissolve,', ''), ('Pixelate, Explode, Build,', ''), ('Blinds, Glitch, TV, Matrix', ''), None,
+             ('Effects sync, ', 'or 1 each way'), ('Opening ', 'plays them in reverse'),
+             ('Size, duration, ', 'and test window')]
     y = 358
     for line in lines:
         if line is None:
