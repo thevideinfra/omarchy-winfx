@@ -3,6 +3,7 @@
 Requires Mesa EGL (surfaceless ES 3.2) and Pillow; no live compositor is used.
 """
 import argparse
+import subprocess
 import ctypes as C
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
@@ -67,7 +68,7 @@ def main():
     box=(72,48,287,191)
     draw.rounded_rectangle(box,6,fill='#1b2030',outline='#7aa2f7',width=2)
     draw.rectangle((74,68,285,70),fill='#424b66')
-    draw.text((84,53),'omarchy-winfx',fill='#c0caf5')
+    draw.text((84,53),'WinFX',fill='#c0caf5')
     for i in range(5):
         draw.rectangle((88,87+i*17,245-i*12,93+i*17),fill=['#7aa2f7','#9ece6a','#bb9af7'][i%3])
     tex=U(); gl('glGenTextures',None,I,C.POINTER(U))(1,C.byref(tex))
@@ -104,17 +105,22 @@ def main():
         images[15].save(args.output/(path.stem+'.png'))
         frames[path.stem]=images
         print(path.name+': compiled, rendered 31 frames, endpoints and premultiplied alpha passed')
-    font_path='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-    font=ImageFont.truetype(font_path,16)
+    font=None
+    for candidate in subprocess.run(['fc-match','-f','%{file}','sans'],capture_output=True,text=True).stdout.split('\n')[:1] + ['/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf']:
+        try: font=ImageFont.truetype(candidate,16); break
+        except OSError: pass
+    font=font or ImageFont.load_default()
+    names=['crumble','shatter','dissolve','pixelate','explode','build','blinds','glitch']
+    columns=4; rows=(len(names)+columns-1)//columns
     combined=[]
     for step in [0]*10+list(range(31))+[30]*8:
-        panel=Image.new('RGB',(w*2,h*2+100),'#0f111a'); d=ImageDraw.Draw(panel)
-        d.text((16,12),'omarchy-winfx · actual shaders, synthetic test window',font=font,fill='#c0caf5')
-        for i,name in enumerate(['crumble','shatter','dissolve','pixelate']):
-            x=(i%2)*w; y=45+(i//2)*(h+20)
+        panel=Image.new('RGB',(w*columns,45+rows*(h+42)),'#0f111a'); d=ImageDraw.Draw(panel)
+        d.text((16,12),'WinFX · closing, rendered from the shipped shaders on a synthetic window (opening plays them in reverse)',font=font,fill='#c0caf5')
+        for i,name in enumerate(names):
+            x=(i%columns)*w; y=45+(i//columns)*(h+42)
             d.text((x+16,y),name.capitalize(),font=font,fill='#7aa2f7')
             panel.paste(frames[name][step],(x,y+22))
-        combined.append(panel)
+        combined.append(panel.resize((panel.width*3//4,panel.height*3//4),Image.LANCZOS))
     combined[25].save(args.output/'effects.png')
     combined[0].save(args.output/'effects.gif',save_all=True,append_images=combined[1:],duration=30,loop=0,optimize=True)
     print('Preview saved to',args.output/'effects.gif')

@@ -1,16 +1,35 @@
 # WinFX
 
-Window open and close effects for Omarchy. Crumble, Shatter, Dissolve and Pixelate, picked from a panel that follows your theme.
+Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Eight effects, picked from a panel that follows your theme.
 
 <p>
-  <img src="docs/previews/panel.png" alt="The WinFX panel with its version and GitHub link in the header: the Animate row with its sync switch, eight effects and the default animation, duration, fragment size, backend status and the Test, Reset and Apply buttons" width="360">
+  <img src="docs/previews/panel.png" alt="The WinFX panel: the Animate row with its sync switch, eight effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="306">
 </p>
 
-![Actual shaders rendered on a synthetic window](docs/previews/effects.gif)
+![The eight effects closing, rendered from the shipped shaders on a synthetic window](docs/previews/effects.gif)
 
-Targets **Omarchy 4.0.5 / Hyprland 0.56.2**. The HyprWindowShade backend is
-third-party experimental compositor code, built against your running Hyprland by
-hyprpm. Offscreen shader checks are described in `docs/VALIDATION.md`.
+*Closing, rendered from the shipped shaders on a synthetic window. Opening plays each effect in reverse.*
+
+- **Eight effects.** Crumble, Shatter (jagged glass shards), Dissolve, Pixelate,
+  Explode, Build, Blinds and Glitch.
+- **Opening and closing.** Animate closing, opening or both. Opening plays an
+  effect in reverse, so Build assembles a window from the bottom up and Explode
+  pulls its chunks together.
+- **Separate or synced.** With both, **Same effect for both** is on by default.
+  Turn it off to give opening and closing their own effect, duration and
+  fragment size.
+- **Keep Omarchy's animation on one side.** Choose Default for opening or closing
+  and WinFX shades only the other.
+- **Make it yours.** The gear in the panel header opens its settings: a
+  **Compact**, **Normal** or **Roomy** layout, a **Small**, **Normal** or
+  **Large** font size, an accent colour (the theme's own, or any colour from its
+  palette) and a switch for the version and GitHub link. They are stored in
+  `shell.json` and also appear under `omarchy bar set videinfra.omarchy-winfx`.
+
+Targets **Omarchy 4.0.5 / Hyprland 0.56.2**. The effects run on the
+[HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade) plugin, which is
+third-party experimental compositor code built against your running Hyprland by
+hyprpm.
 
 ## Install
 
@@ -24,61 +43,52 @@ backend if it is missing, restarts the shell and leaves effects **disabled**.
 
 The backend step checks for `base-devel`, `hyprpm`, `cmake`, `cpio`, `git` and
 `pkgconf`, and installs missing packages through pacman. It asks for administrator
-authorization through `sudo` in the terminal. Declined or failed package
-installation stops setup. It then installs/builds/enables
-[HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade). hyprpm may request
-permission to prepare matching headers. Review its output; the installer never
-forces a plugin load or upgrades Hyprland. The same steps run from a shell with
-`~/.config/omarchy/plugins/videinfra.omarchy-winfx/install.sh --backend`
+authorization through `sudo` in the terminal, and declined or failed package
+installation stops setup. It then installs, builds and enables HyprWindowShade.
+hyprpm may ask permission to prepare matching headers. Review its output: the
+installer never forces a plugin load or upgrades Hyprland. The same steps run from a
+shell with `~/.config/omarchy/plugins/videinfra.omarchy-winfx/install.sh --backend`
 (without `--backend` if the backend is already loaded).
 
-Then select Crumble, switch **ON**, and **Apply**. Choose **Test** and press
-any key inside the window to close it. Tests use applied settings; apply any pending
-edits first.
+## Use
 
-## Controls
+Pick an effect, switch **ON** in the header and click **Apply**. **Test** opens a
+window in your default terminal; press any key in it to close it and watch the
+effect. The test uses the applied settings, so apply pending changes first.
 
-- **Effect:** Crumble falls in pieces; Shatter breaks into jagged glass shards;
-  Dissolve removes fine blocks; Pixelate enlarges blocks before fading; Explode
-  blasts chunks outward from a flash; Build drops bricks away from the top (opening
-  builds from the bottom up); Blinds slide strips off alternately; Glitch jumps
-  bands, splits colours and drops blocks out.
-- **Duration:** 150–1500 ms, ±50ms buttons and 250/450/750ms presets.
-- **Fragment size:** Small / Medium / Large; scales the pieces, bricks, strips or glitch bands of every effect.
-- **Animate:** Closing, Opening or Both. Opening plays an effect in reverse: the
-  window starts broken up and assembles itself. With Both, **Same effect for both**
-  is on by default; turn it off to pick a different effect, duration and fragment
-  size for opening and closing (use the Edit closing / Edit opening buttons).
-- **OFF or Default:** restores the pre-existing animation for that direction;
-  Default on one side keeps Omarchy's animation there and shades only the other.
-- **Reset:** stages disabled, Crumble, 450ms, medium. Apply commits it.
-- **Keyboard:** arrows or h/j/k/l select; Return applies; Escape closes.
-
-- **Make it yours.** The ⚙ in the panel header opens its settings: a
-  **Compact**, **Normal** or **Roomy** layout, a **Small**, **Normal** or
-  **Large** font size, an accent colour (the theme's own, or any colour from its
-  palette) and a switch for the version and GitHub link. They are stored in
-  `shell.json` and also appear under `omarchy bar set videinfra.omarchy-winfx`.
+- **Animate:** Closing, Opening or Both.
+- **Effect:** one of the eight, or Default for Omarchy's own animation.
+- **Duration:** 150–1500 ms, with 250/450/750 presets and ±50 ms steps.
+- **Fragment size:** Small, Medium or Large. It scales the pieces, bricks, strips or
+  glitch bands of every effect.
+- **Reset:** stages the defaults (disabled, Crumble, 450 ms, medium). Apply commits it.
+- **Keyboard:** arrows select an effect, Return applies, Escape closes.
 
 The panel follows the shell's current theme colours, font, border and scaling.
-There is no background polling process. The test window opens in your default terminal (through `xdg-terminal-exec`, supplied by Omarchy).
-No other window is closed by the preview button.
+There is no background polling process, and the Test window is the only window
+WinFX ever opens or closes.
 
 ## Behaviour and limitations
 
 Close requests are untouched. The backend animates the compositor's closing
 snapshot after the application actually closes, including the close button,
 keyboard shortcut and application exit. Unsaved-document prompts remain normal.
-No screenshots are stored. Opening, movement and workspace animations are untouched.
+No screenshots are stored. Movement and workspace animations are untouched.
 
-The plugin sets **fallback** close and open shaders; explicit per-application shader
-rules take priority. It doesn't animate layer surfaces (bar, launcher, popups).
-Opening runs on top of Hyprland's own open animation, so a strong `windowsIn`
-fade or popin can mask part of it. `foot` gives Hyprland no window content when it closes, so its close shows only a fading border and no effect; opening works. Alacritty, Ghostty-style and GTK/Qt apps close normally. Hyprland animations must be enabled so a close snapshot exists. Fullscreen,
-rotated/scaled monitors, NVIDIA and multiple simultaneous closes need live testing.
-Pieces are drawn inside the window's own box, so Explode's far chunks and Blinds' strips
-are clipped at its edges and fragment travel is limited. Shatter cuts the window into jagged
-Voronoi shards; it is not a physics simulation.
+- **Fallback shaders.** WinFX sets fallback open and close shaders; explicit
+  per-application shader rules take priority. It doesn't animate layer surfaces
+  (bar, launcher, popups).
+- **Opening runs on top of Hyprland's own open animation,** so a strong `windowsIn`
+  fade or popin can mask part of it. Hyprland animations must be enabled, or no
+  close snapshot exists.
+- **`foot` can't animate on close.** It gives Hyprland no window content when it
+  closes, so its close shows only a fading border. Opening works, and other terminals
+  such as Alacritty close normally.
+- **Pieces stay inside the window's box.** Explode's outer chunks and Blinds' strips
+  are clipped at its edges, and fragment travel is limited. Shatter cuts the window
+  into jagged Voronoi shards; it is not a physics simulation.
+- **Needs more testing:** fullscreen windows, rotated or scaled monitors, NVIDIA and
+  several windows closing at once. See `docs/VALIDATION.md`.
 
 This release intentionally rejects other Hyprland versions. After an upgrade,
 leave effects disabled until compatibility has been checked. `hyprpm update`
@@ -90,16 +100,16 @@ never bypass hyprpm's checks or force-load a `.so`.
 
 - Plugin: `~/.config/omarchy/plugins/videinfra.omarchy-winfx/`
 - Settings: `~/.config/omarchy-winfx/settings.json`
-- Generated shader/config: `~/.config/omarchy-winfx/shaders/*.glsl`, `active.lua`
+- Generated shaders and rules: `~/.config/omarchy-winfx/shaders/close.glsl`,
+  `open.glsl` and `active.lua`
 - Backups: `~/.config/omarchy-winfx/backups/`
 - Integration: one line ending `-- omarchy-winfx managed loader` in
-  `~/.config/hypr/hyprland.lua`; one widget in `~/.config/omarchy/shell.json`.
+  `~/.config/hypr/hyprland.lua`, and one widget in `~/.config/omarchy/shell.json`.
 
 Writes are serialized and replaced atomically per file; failed reloads restore
-prior files. Backups are retained before editing integration files. Symlinked
+prior files. Backups are kept before integration files are edited. Symlinked
 configuration files keep their links. Multi-file updates are not power-loss
-atomic. No keybindings are changed. Settings use their own file; panel visual
-properties come directly from the shell.
+atomic. No keybindings are changed.
 
 If startup is affected, remove the single line ending
 `-- omarchy-winfx managed loader` from `~/.config/hypr/hyprland.lua` from a TTY.
@@ -115,9 +125,10 @@ Run before deleting the plugin directory:
 ~/.config/omarchy/plugins/videinfra.omarchy-winfx/uninstall.sh
 ```
 
-Removes its loader, bar entry and installed plugin files, reloads Hyprland and
-restarts the shell. Keeps settings/backups and the shared HyprWindowShade backend.
-`omarchy plugin remove` alone cannot remove the Lua loader, so use the script.
+It removes the loader, the bar entry and the installed plugin files, reloads
+Hyprland and restarts the shell. It keeps your settings, the backups and the shared
+HyprWindowShade backend. `omarchy plugin remove` alone cannot remove the Lua loader,
+so use the script.
 
 ## CLI
 
@@ -128,10 +139,10 @@ restarts the shell. Keeps settings/backups and the shared HyprWindowShade backen
 ~/.config/omarchy/plugins/videinfra.omarchy-winfx/bin/omarchy-winfx preview
 ```
 
-The helper uses Python's standard library. Effect and settings input is validated;
-commands use argv, never shell interpolation. Homes containing whitespace or `@`
-are rejected for shader activation because the backend's shader-tag syntax uses
-those characters as separators.
+The helper uses Python's standard library. Input is validated and commands use
+argv, never shell interpolation. Homes containing whitespace or `@` are rejected for
+shader activation, because the backend's shader-tag syntax uses those characters as
+separators.
 
 ## Development
 
@@ -141,11 +152,10 @@ bash -n install.sh uninstall.sh
 python3 tests/render_shaders.py --output /tmp/omarchy-winfx-frames
 ```
 
-The optional shader renderer requires Mesa EGL with OpenGL ES 3.2 and Pillow.
-It compiles the actual shipped shaders, checks their endpoints, and renders a
-comparison GIF. It does not test the compositor's snapshot integration.
+The optional shader renderer needs Mesa EGL with OpenGL ES 3.2 and Pillow. It
+compiles the shipped shaders, checks their endpoints and premultiplied alpha, and
+renders the comparison GIF. It does not test the compositor's snapshot integration.
 
-Design reference: [omaudiopanel](https://github.com/thevideinfra/omaudiopanel) and
-[Tandem](https://github.com/thevideinfra/tandem). Backend API reference:
-HyprWindowShade commit `4414596c2fbb64cb5bb4aa7342900051338fed7a`, with upstream
-0.56.2 compatibility pin `a4c6b8af424a189072427c4c90ef2938e1b481d3`.
+Backend API reference: HyprWindowShade commit
+`4414596c2fbb64cb5bb4aa7342900051338fed7a`, with upstream 0.56.2 compatibility pin
+`a4c6b8af424a189072427c4c90ef2938e1b481d3`.

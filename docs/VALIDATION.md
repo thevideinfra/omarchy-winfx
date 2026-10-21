@@ -1,39 +1,38 @@
-# Validation — 2026-10-19
+# Validation — 2026-10-21
 
-Target: Omarchy 4.0.5, Hyprland 0.56.2. This is a source release candidate.
+Target: Omarchy 4.0.5, Hyprland 0.56.2.
 
-## Checked here
+## Checked
 
-- 12 Python tests: strict settings validation, version/backend gating, disabling,
-  fallback rule generation, unique shader cache keys, repeat integration,
+- 25 Python tests: strict settings validation, separate and synced open/close
+  settings, version and backend gating, disabling, per-direction rule generation,
+  constant rule tags, reverse playback of every effect, repeat integration,
   unrelated config preservation, symlink preservation, malformed JSON refusal,
-  failed apply and failed install rollback, real CLI install/apply/disable/remove
-  using an isolated HOME and a fake hyprctl boundary.
-- Bash syntax checks for install.sh and uninstall.sh.
-- All four shipped GLSL ES 3.20 shaders compile/link on Mesa OpenGL ES 3.2.
-  31 frames per shader rendered against a synthetic monitor-sized texture with
-  a smaller window sub-rectangle. Starting pixels match the original exactly;
-  final alpha is zero; premultiplied colour never exceeds alpha in every frame.
-- QML instantiation, visual inspection and qmllint with explicit stubs for
-  Quickshell/Omarchy interfaces. Zero lint diagnostics with those stubs. This
-  checks QML syntax and layout, not live shell imports, IPC or focus behaviour.
+  failed apply and failed install rollback, and a real CLI install/apply/disable/remove
+  run using an isolated HOME and a fake hyprctl boundary.
+- Bash syntax checks for `install.sh` and `uninstall.sh`.
+- All eight shipped GLSL ES 3.20 shaders compile and link on Mesa OpenGL ES 3.2
+  (`tests/render_shaders.py`). Each renders 31 frames against a synthetic
+  monitor-sized texture with a smaller window sub-rectangle. Starting pixels match the
+  original exactly, final alpha is zero, and premultiplied colour never exceeds alpha.
+- Live on one Omarchy 4.0.5 / Hyprland 0.56.2 session: install from the panel,
+  applying every effect, opening and closing windows in Alacritty with the effects
+  captured frame by frame, the panel at each density and font size, and migration
+  from the plugin's earlier name. Nautilus, Strata and Brave were reported working
+  by the author.
 
-`previews/panel.png` is a screenshot of the panel running in the Omarchy shell. `previews/effects.gif` renders the actual shaders on a synthetic window.
-Neither is a recording from a running Omarchy desktop.
+`docs/previews/panel.png` is a screenshot of the panel in the Omarchy shell.
+`docs/previews/effects.gif` renders the shipped shaders on a synthetic window; it is
+not a recording of the desktop.
 
-## Must still be checked on the target desktop
+## Known limitation
 
-1. Build/load pinned HyprWindowShade with hyprpm; confirm no config errors.
-2. Install disabled; confirm the panel appears and theme changes update it.
-3. Test each effect with the disposable foot window at all fragment sizes.
-4. Close a window by shortcut, close button and app exit. Confirm a cancelled
-   unsaved-document prompt never animates or destroys the window.
-5. Test tiled/floating/fullscreen windows, monitor scaling/rotation and edges;
-   confirm fragment clipping, direction, reflow and damage behave acceptably.
-6. Test concurrent closes, GPU usage and NVIDIA/AMD/Intel as applicable.
-7. Disable, restart the session, and uninstall; confirm defaults and unrelated
-   configuration remain intact.
+`foot` exits without leaving window content in Hyprland's close snapshot, so its close
+cannot animate, with or without WinFX. Opening works.
 
-The container has no live Hyprland/Omarchy session. The upstream C++ renderer was
-inspected but not compiled or loaded here. Actual compatibility and performance
-remain unverified until the above checks pass.
+## Not yet checked
+
+1. Fullscreen windows, and monitor scaling or rotation at the window edges.
+2. Concurrent closes and GPU cost across NVIDIA, AMD and Intel.
+3. A cancelled unsaved-document prompt never animating or destroying the window.
+4. Disabling, restarting the session and uninstalling on a second machine.
