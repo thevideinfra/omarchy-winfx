@@ -270,7 +270,7 @@ Panel {
     Item {
       WindowFx {
         anchors.centerIn: parent
-        size: Math.round(button.fontSize * 1.0)
+        size: Math.round(button.fontSize * 1.1)
         color: button.foreground
       }
     }
