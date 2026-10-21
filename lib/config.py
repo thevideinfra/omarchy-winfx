@@ -19,7 +19,7 @@ MARKER = '-- omarchy-winfx managed loader'
 # opening mirrors closing and the open* keys are rewritten to match on every Apply.
 DEFAULTS = {'enabled': False, 'effect': 'crumble', 'duration': 450, 'size': 'medium', 'when': 'close',
             'sync': True, 'openEffect': 'crumble', 'openDuration': 450, 'openSize': 'medium'}
-EFFECTS = ('crumble', 'shatter', 'dissolve', 'pixelate', 'explode', 'build', 'blinds', 'glitch', 'default')
+EFFECTS = ('crumble', 'shatter', 'dissolve', 'pixelate', 'explode', 'build', 'blinds', 'glitch', 'tv', 'matrix', 'default')
 WHEN = ('close', 'open', 'both')
 SIZES = {'small': 28, 'medium': 18, 'large': 11}
 

@@ -95,6 +95,8 @@ Panel {
     { key: "build", title: "Build", glyph: "▤", detail: "Bricks drop away from the top down. Opening builds from the bottom up." },
     { key: "blinds", title: "Blinds", glyph: "☰", detail: "Strips slide off in alternating directions." },
     { key: "glitch", title: "Glitch", glyph: "▚", detail: "Bands jump, colours split and blocks drop out." },
+    { key: "tv", title: "TV", glyph: "▬", detail: "Squashes to a bright line, then a dot, like an old TV switching off." },
+    { key: "matrix", title: "Matrix", glyph: "⠿", detail: "Green digital rain sweeps down and wipes the window away." },
     { key: "default", title: "Default", glyph: "−", detail: "Use your existing Omarchy window animations." }
   ]
   // The direction the effect controls edit: with one direction picked it is that

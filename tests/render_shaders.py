@@ -110,15 +110,15 @@ def main():
         try: font=ImageFont.truetype(candidate,16); break
         except OSError: pass
     font=font or ImageFont.load_default()
-    names=['crumble','shatter','dissolve','pixelate','explode','build','blinds','glitch']
-    columns=4; rows=(len(names)+columns-1)//columns
+    names=['crumble','shatter','dissolve','pixelate','explode','build','blinds','glitch','tv','matrix']
+    columns=5; rows=(len(names)+columns-1)//columns
     combined=[]
     for step in [0]*10+list(range(31))+[30]*8:
         panel=Image.new('RGB',(w*columns,45+rows*(h+42)),'#0f111a'); d=ImageDraw.Draw(panel)
         d.text((16,12),'WinFX · closing, rendered from the shipped shaders on a synthetic window (opening plays them in reverse)',font=font,fill='#c0caf5')
         for i,name in enumerate(names):
             x=(i%columns)*w; y=45+(i//columns)*(h+42)
-            d.text((x+16,y),name.capitalize(),font=font,fill='#7aa2f7')
+            d.text((x+16,y),'TV' if name=='tv' else name.capitalize(),font=font,fill='#7aa2f7')
             panel.paste(frames[name][step],(x,y+22))
         combined.append(panel.resize((panel.width*3//4,panel.height*3//4),Image.LANCZOS))
     combined[25].save(args.output/'effects.png')
