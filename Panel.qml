@@ -24,17 +24,15 @@ Panel {
   readonly property bool showAccent: Model.settingBool(setting("showAccent", true), true)
   readonly property string accentChoice: String(setting("accent", "theme"))
   readonly property bool showHeaderInfo: Model.settingBool(setting("showHeaderInfo", true), true)
-  readonly property bool showSubtitle: Model.settingBool(setting("showSubtitle", true), true)
-  readonly property bool showDescription: Model.settingBool(setting("showDescription", true), true)
   readonly property bool showStatus: Model.settingBool(setting("showStatus", true), true)
   readonly property bool showHints: Model.settingBool(setting("showHints", true), true)
   readonly property bool dimWhenOff: Model.settingBool(setting("dimWhenOff", true), true)
   readonly property bool rightClickToggle: Model.settingBool(setting("rightClickToggle", false), false)
-  // The bar icon (and the panel header's): letters or a glyph, chosen in settings.
-  readonly property var iconChoices: ["FX", "fx", "WFX", "wfx", "✦", "▦"]
+  // The bar icon (and the panel header's): "fx" in a small window, letters or a glyph, chosen in settings.
+  readonly property var iconChoices: ["window", "FX", "fx", "WFX", "wfx", "✦"]
   readonly property string barIcon: {
-    var chosen = String(setting("barIcon", "FX"))
-    return iconChoices.indexOf(chosen) >= 0 ? chosen : "FX"
+    var chosen = String(setting("barIcon", "window"))
+    return iconChoices.indexOf(chosen) >= 0 ? chosen : "window"
   }
   property bool settingsOpen: false
 
@@ -254,13 +252,27 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: root.barIcon
+    text: root.barIcon === "window" ? "" : root.barIcon
+    iconComponent: root.barIcon === "window" ? windowIcon : null
     // Dimmed while effects are off, so the bar shows the state at a glance.
     opacity: root.dimWhenOff && root.loaded && !root.saved.enabled ? 0.5 : 1
     tooltipText: root.needsSetup ? "WinFX · click to set up" : "WinFX · window effects"
     onPressed: function(b) {
       if (b === Qt.RightButton && root.rightClickToggle) root.toggleNow()
       else root.toggle()
+    }
+  }
+
+  // "fx" inside a small window, drawn so it follows the bar's colour and icon size.
+  Component {
+    id: windowIcon
+
+    Item {
+      WindowFx {
+        anchors.centerIn: parent
+        size: Math.round(button.fontSize * 1.15)
+        color: button.foreground
+      }
     }
   }
 
@@ -298,16 +310,30 @@ Panel {
           width: parent.width
           implicitHeight: Math.max(heroIcon.implicitHeight, heroLabels.implicitHeight, powerSwitch.implicitHeight)
 
-          Text {
+          Item {
             id: heroIcon
-            textFormat: Text.PlainText
-            text: root.barIcon
-            color: root.accent
-            font.family: root.bar.fontFamily
-            font.pixelSize: root.barIcon.length > 1 ? root.fontTitle : root.fontDisplay
-            font.bold: root.barIcon.length > 1
+            implicitWidth: root.barIcon === "window" ? heroWindow.implicitWidth : heroText.implicitWidth
+            implicitHeight: root.barIcon === "window" ? heroWindow.implicitHeight : heroText.implicitHeight
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
+
+            WindowFx {
+              id: heroWindow
+              visible: root.barIcon === "window"
+              size: Math.round(root.fontDisplay * 1.1)
+              color: root.accent
+            }
+
+            Text {
+              id: heroText
+              visible: root.barIcon !== "window"
+              textFormat: Text.PlainText
+              text: root.barIcon
+              color: root.accent
+              font.family: root.bar.fontFamily
+              font.pixelSize: root.barIcon.length > 1 ? root.fontTitle : root.fontDisplay
+              font.bold: root.barIcon.length > 1
+            }
           }
 
           // The switch owns enabling, mouse and keyboard alike.
@@ -444,7 +470,6 @@ Panel {
 
             Text {
               width: parent.width
-              visible: root.showSubtitle
               textFormat: Text.PlainText
               text: "Window open and close effects"
               color: root.bar.foreground
@@ -569,7 +594,6 @@ Panel {
 
             Text {
               width: parent.width
-              visible: root.showDescription
               textFormat: Text.PlainText
               text: root.description()
               color: root.bar.foreground
@@ -859,20 +883,6 @@ Panel {
 
       SettingSwitch {
         width: parent.width
-        label: "Subtitle under the name"
-        checked: root.showSubtitle
-        onToggled: root.setSetting("showSubtitle", !root.showSubtitle)
-      }
-
-      SettingSwitch {
-        width: parent.width
-        label: "Effect description"
-        checked: root.showDescription
-        onToggled: root.setSetting("showDescription", !root.showDescription)
-      }
-
-      SettingSwitch {
-        width: parent.width
         label: "Backend status"
         checked: root.showStatus
         onToggled: root.setSetting("showStatus", !root.showStatus)
@@ -883,6 +893,47 @@ Panel {
         label: "Key hints"
         checked: root.showHints
         onToggled: root.setSetting("showHints", !root.showHints)
+      }
+    }
+  }
+
+  // A small window with "fx" in lower case inside it: the title bar is a line
+  // across the top, drawn in the same colour as the letters.
+  component WindowFx: Item {
+    id: icon
+    property real size: 16
+    property color color: root.bar.foreground
+    readonly property real stroke: Math.max(1, Math.round(size / 11))
+
+    implicitWidth: Math.round(size * 1.3)
+    implicitHeight: size
+    width: implicitWidth
+    height: implicitHeight
+
+    Rectangle {
+      anchors.fill: parent
+      color: "transparent"
+      radius: icon.size * 0.2
+      border.width: icon.stroke
+      border.color: icon.color
+
+      Rectangle {
+        x: 0
+        y: Math.round(icon.size * 0.27)
+        width: parent.width
+        height: icon.stroke
+        color: icon.color
+      }
+
+      Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: Math.round(icon.size * 0.27) + (parent.height - Math.round(icon.size * 0.27) - height) / 2
+        textFormat: Text.PlainText
+        text: "fx"
+        color: icon.color
+        font.family: root.bar.fontFamily
+        font.pixelSize: Math.round(icon.size * 0.44)
+        font.bold: true
       }
     }
   }

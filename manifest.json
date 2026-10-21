@@ -24,11 +24,9 @@
       "accent": "theme",
       "showAccent": true,
       "showHeaderInfo": true,
-      "barIcon": "FX",
+      "barIcon": "window",
       "dimWhenOff": true,
       "rightClickToggle": false,
-      "showSubtitle": true,
-      "showDescription": true,
       "showStatus": true,
       "showHints": true
     },
@@ -91,15 +89,15 @@
         "type": "enum",
         "label": "Bar icon",
         "options": [
+          "window",
           "FX",
           "fx",
           "WFX",
           "wfx",
-          "✦",
-          "▦"
+          "✦"
         ],
-        "defaultValue": "FX",
-        "description": "The icon the widget shows in the bar and in the panel header."
+        "defaultValue": "window",
+        "description": "The icon the widget shows in the bar and in the panel header: fx in a small window, or letters or a glyph."
       },
       {
         "key": "dimWhenOff",
@@ -112,18 +110,6 @@
         "type": "boolean",
         "label": "Right-click the bar icon to switch effects on or off",
         "defaultValue": false
-      },
-      {
-        "key": "showSubtitle",
-        "type": "boolean",
-        "label": "Show the subtitle under the name",
-        "defaultValue": true
-      },
-      {
-        "key": "showDescription",
-        "type": "boolean",
-        "label": "Show the effect description",
-        "defaultValue": true
       },
       {
         "key": "showStatus",
