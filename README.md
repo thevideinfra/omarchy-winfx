@@ -23,7 +23,10 @@ Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Te
 - **Make it yours.** The gear in the panel header opens its settings: a
   **Compact**, **Normal** or **Roomy** layout, a **Small**, **Normal** or
   **Large** font size, an accent colour (the theme's own, or any colour from its
-  palette) and a switch for the version and GitHub link. They are stored in
+  palette), the bar icon (`FX`, `fx`, `WFX`, `wfx`, a sparkle or a grid), whether the
+  icon dims while effects are off, an optional right-click on the icon to switch
+  effects on or off, and switches for the version and GitHub link, the subtitle, the
+  effect description, the backend status line and the key hints. They are stored in
   `shell.json` and also appear under `omarchy bar set videinfra.omarchy-winfx`.
 
 **Credit:** WinFX is a panel, installer and set of shaders on top of

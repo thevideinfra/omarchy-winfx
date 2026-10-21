@@ -826,14 +826,14 @@ Panel {
 
     SettingSwitch {
       width: parent.width
-      label: "Dim the icon while effects are off"
+      label: "Dim icon while off"
       checked: root.dimWhenOff
       onToggled: root.setSetting("dimWhenOff", !root.dimWhenOff)
     }
 
     SettingSwitch {
       width: parent.width
-      label: "Right-click the icon to toggle"
+      label: "Right-click icon toggles"
       checked: root.rightClickToggle
       onToggled: root.setSetting("rightClickToggle", !root.rightClickToggle)
     }
