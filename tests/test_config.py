@@ -63,10 +63,11 @@ class ConfigTests(unittest.TestCase):
         self.assertNotIn('@', result)
         self.assertIn('// @duration 0.650', c.shader_source(self.ctx, value))
 
-    def test_when_selects_close_open_or_both_rules(self):
-        for when, close, opened in [('close', True, False), ('open', False, True), ('both', True, True)]:
-            with self.subTest(when=when):
-                result = c.render_lua({**c.DEFAULTS, 'enabled':True, 'when':when}, self.ctx)
+    def test_each_direction_with_an_effect_gets_a_rule(self):
+        for effect, open_effect, close, opened in [('crumble', 'default', True, False), ('default', 'crumble', False, True),
+                                                   ('crumble', 'shatter', True, True), ('default', 'default', False, False)]:
+            with self.subTest(effect=effect, open_effect=open_effect):
+                result = c.render_lua({**c.DEFAULTS, 'enabled':True, 'effect':effect, 'openEffect':open_effect}, self.ctx)
                 self.assertEqual('shader_close_default:' in result, close)
                 self.assertEqual('shader_open_default:' in result, opened)
                 self.assertEqual(result.count('hl.window_rule'), close + opened)
@@ -84,14 +85,20 @@ class ConfigTests(unittest.TestCase):
 
     def test_sync_mirrors_closing_onto_opening(self):
         value = c.validate({**c.DEFAULTS, 'effect':'shatter', 'duration':900, 'size':'large',
-                            'openEffect':'dissolve', 'openDuration':200, 'openSize':'small', 'sync':True, 'when':'both'})
+                            'openEffect':'dissolve', 'openDuration':200, 'openSize':'small', 'sync':True})
         self.assertEqual((value['openEffect'], value['openDuration'], value['openSize']), ('shatter', 900, 'large'))
-        # Opening alone has its own settings; sync only ties the two together.
-        solo = c.validate({**c.DEFAULTS, 'when':'open', 'sync':True, 'openEffect':'dissolve'})
+        # Unsynced, opening keeps its own settings.
+        solo = c.validate({**c.DEFAULTS, 'sync':False, 'openEffect':'dissolve'})
         self.assertEqual(solo['openEffect'], 'dissolve')
 
+    def test_both_directions_apply_together_whatever_was_edited_last(self):
+        value = {**c.DEFAULTS, 'enabled':True, 'effect':'shatter', 'openEffect':'build'}
+        result = c.render_lua(value, self.ctx)
+        self.assertIn('shader_close_default:', result)
+        self.assertIn('shader_open_default:', result)
+
     def test_unsynced_directions_use_their_own_effect_duration_and_size(self):
-        value = c.validate({**c.DEFAULTS, 'enabled':True, 'when':'both', 'sync':False, 'effect':'crumble', 'duration':300,
+        value = c.validate({**c.DEFAULTS, 'enabled':True, 'sync':False, 'effect':'crumble', 'duration':300,
                             'size':'small', 'openEffect':'pixelate', 'openDuration':800, 'openSize':'large'})
         closing = c.shader_source(self.ctx, value)
         opening = c.shader_source(self.ctx, value, opening=True)
@@ -102,7 +109,7 @@ class ConfigTests(unittest.TestCase):
         self.assertNotEqual(closing.replace('28.0', ''), opening.replace('11.0', ''))
 
     def test_a_default_side_gets_no_rule(self):
-        value = {**c.DEFAULTS, 'enabled':True, 'when':'both', 'sync':False, 'effect':'default', 'openEffect':'crumble'}
+        value = {**c.DEFAULTS, 'enabled':True, 'sync':False, 'effect':'default', 'openEffect':'crumble'}
         result = c.render_lua(value, self.ctx)
         self.assertNotIn('shader_close_default', result)
         self.assertIn('shader_open_default', result)
@@ -116,12 +123,18 @@ class ConfigTests(unittest.TestCase):
         self.assertTrue(value['sync'])
         self.assertEqual((value['openEffect'], value['openDuration'], value['openSize']), ('shatter', 700, 'large'))
 
-    def test_settings_file_without_when_gets_the_default(self):
+    def test_old_when_choice_becomes_a_default_side(self):
         self.ctx.state.mkdir(parents=True, exist_ok=True)
-        self.ctx.settings.write_text(json.dumps({k: v for k, v in c.DEFAULTS.items() if k != 'when'}))
-        self.assertEqual(c.read_settings(self.ctx)['when'], 'close')
+        base = {'enabled':True,'effect':'shatter','duration':700,'size':'large','sync':False,
+                'openEffect':'build','openDuration':500,'openSize':'small'}
+        for when, effect, open_effect in [('close', 'shatter', 'default'), ('open', 'default', 'build'), ('both', 'shatter', 'build')]:
+            with self.subTest(when=when):
+                self.ctx.settings.write_text(json.dumps({**base, 'when':when}))
+                value = c.read_settings(self.ctx)
+                self.assertEqual((value['effect'], value['openEffect']), (effect, open_effect))
+                self.assertNotIn('when', value)
         with self.assertRaises(ValueError):
-            c.validate({**c.DEFAULTS, 'when': 'never'})
+            c.validate({**c.DEFAULTS, 'when': 'both'})
 
     def test_install_is_idempotent_preserves_unrelated(self):
         c.integrate(self.ctx)

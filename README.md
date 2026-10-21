@@ -3,7 +3,7 @@
 Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Ten effects, picked from a panel that follows your theme.
 
 <p>
-  <img src="docs/previews/panel.png" alt="The WinFX panel: the Animate row with its sync switch, ten effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="306">
+  <img src="docs/previews/panel.png" alt="The WinFX panel: the sync switch with its Closing and Opening tabs, ten effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="306">
 </p>
 
 ![The ten effects closing, rendered from the shipped shaders on a synthetic window](docs/previews/effects.gif)
@@ -13,14 +13,13 @@ Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Te
 - **Ten effects.** Crumble, Shatter (jagged glass shards), Dissolve, Pixelate,
   Explode, Build, Blinds, Glitch, TV (an old set switching off) and Matrix (digital
   rain).
-- **Opening and closing.** Animate closing, opening or both. Opening plays an
-  effect in reverse, so Build assembles a window from the bottom up and Explode
-  pulls its chunks together.
-- **Separate or synced.** With both, **Same effect for both** is on by default.
-  Turn it off to give opening and closing their own effect, duration and
-  fragment size.
+- **Opening and closing.** Opening plays an effect in reverse, so Build assembles a
+  window from the bottom up and Explode pulls its chunks together.
+- **Separate or synced.** Turn **Same effect for opening and closing** on to use one
+  effect, duration and fragment size for both. Turn it off and the Closing and Opening
+  tabs each keep their own. Both always apply together when you click Apply.
 - **Keep Omarchy's animation on one side.** Choose Default for opening or closing
-  and WinFX shades only the other.
+  and WinFX shades only the other. Out of the box only closing is shaded.
 - **Make it yours.** The gear in the panel header opens its settings: a
   **Compact**, **Normal** or **Roomy** layout, a **Small**, **Normal** or
   **Large** font size, an accent colour (the theme's own, or any colour from its
@@ -61,12 +60,12 @@ Pick an effect, switch **ON** in the header and click **Apply**. **Test** opens 
 window in your default terminal; press any key in it to close it and watch the
 effect. The test uses the applied settings, so apply pending changes first.
 
-- **Animate:** Closing, Opening or Both.
+- **Open & close:** one effect for both, or separate Closing and Opening tabs.
 - **Effect:** one of the ten, or Default for Omarchy's own animation.
 - **Duration:** 150–1500 ms, with 250/450/750 presets and ±50 ms steps.
 - **Fragment size:** Small, Medium or Large. It scales the pieces, bricks, strips or
   glitch bands of every effect.
-- **Reset:** stages the defaults (disabled, Crumble, 450 ms, medium). Apply commits it.
+- **Reset:** stages the defaults (disabled, Crumble on close, Omarchy's own animation on open). Apply commits it.
 - **Keyboard:** arrows select an effect, Return applies, Escape closes.
 
 The panel follows the shell's current theme colours, font, border and scaling.
@@ -140,7 +139,7 @@ so use the script.
 ```bash
 ~/.config/omarchy/plugins/videinfra.omarchy-winfx/bin/omarchy-winfx status
 ~/.config/omarchy/plugins/videinfra.omarchy-winfx/bin/omarchy-winfx apply \
-  '{"enabled":true,"effect":"crumble","duration":450,"size":"medium","when":"close","sync":true,"openEffect":"crumble","openDuration":450,"openSize":"medium"}'
+  '{"enabled":true,"effect":"crumble","duration":450,"size":"medium","sync":false,"openEffect":"default","openDuration":450,"openSize":"medium"}'
 ~/.config/omarchy/plugins/videinfra.omarchy-winfx/bin/omarchy-winfx preview
 ```
 

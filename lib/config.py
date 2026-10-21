@@ -15,12 +15,12 @@ import time
 PLUGIN_ID = 'videinfra.omarchy-winfx'
 TARGET_HYPRLAND = '0.56.2'
 MARKER = '-- omarchy-winfx managed loader'
-# effect/duration/size belong to closing, the open* keys to opening. With sync on,
-# opening mirrors closing and the open* keys are rewritten to match on every Apply.
-DEFAULTS = {'enabled': False, 'effect': 'crumble', 'duration': 450, 'size': 'medium', 'when': 'close',
-            'sync': True, 'openEffect': 'crumble', 'openDuration': 450, 'openSize': 'medium'}
+# effect/duration/size belong to closing, the open* keys to opening. An effect of
+# 'default' leaves Omarchy's own animation in that direction. With sync on, opening
+# mirrors closing and the open* keys are rewritten to match on every Apply.
+DEFAULTS = {'enabled': False, 'effect': 'crumble', 'duration': 450, 'size': 'medium',
+            'sync': False, 'openEffect': 'default', 'openDuration': 450, 'openSize': 'medium'}
 EFFECTS = ('crumble', 'shatter', 'dissolve', 'pixelate', 'explode', 'build', 'blinds', 'glitch', 'tv', 'matrix', 'default')
-WHEN = ('close', 'open', 'both')
 SIZES = {'small': 28, 'medium': 18, 'large': 11}
 
 class Context:
@@ -47,7 +47,7 @@ def directions(value):
         return []
     return [(opening, name, tag)
             for opening, name, tag in ((False, 'close', 'shader_close_default'), (True, 'open', 'shader_open_default'))
-            if value['when'] in (name, 'both') and side(value, opening)[0] != 'default']
+            if side(value, opening)[0] != 'default']
 
 
 def validate(value):
@@ -63,10 +63,8 @@ def validate(value):
             raise ValueError('Duration must be an integer from 150 to 1500 milliseconds.')
         if not isinstance(size, str) or size not in SIZES:
             raise ValueError('Fragment size must be small, medium or large.')
-    if value['when'] not in WHEN:
-        raise ValueError('when must be close, open or both.')
     value = dict(value)
-    if value['sync'] and value['when'] == 'both':
+    if value['sync']:
         value['openEffect'], value['openDuration'], value['openSize'] = side(value)
     return value
 
@@ -76,8 +74,17 @@ def read_settings(ctx):
         return dict(DEFAULTS)
     saved = json.loads(ctx.settings.read_text())
     # Files from before opening had its own settings: opening follows closing.
+    if 'openEffect' not in saved:
+        saved.setdefault('sync', True)
     for key in ('effect', 'duration', 'size'):
         saved.setdefault('open' + key.capitalize(), saved.get(key, DEFAULTS[key]))
+    # Files from when a Closing / Opening / Both choice picked which directions played:
+    # the direction that did not play keeps Omarchy's animation.
+    when = saved.pop('when', 'both')
+    if when == 'close':
+        saved.update(sync=False, openEffect='default')
+    elif when == 'open':
+        saved.update(sync=False, effect='default')
     return validate({**DEFAULTS, **saved})
 
 

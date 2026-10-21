@@ -63,18 +63,17 @@ Panel {
   }
 
   // ---- Effect settings (the helper's own file; they drive the compositor) ----
-  readonly property var defaults: ({ enabled: false, effect: "crumble", duration: 450, size: "medium", when: "close",
-    sync: true, openEffect: "crumble", openDuration: 450, openSize: "medium" })
+  readonly property var defaults: ({ enabled: false, effect: "crumble", duration: 450, size: "medium",
+    sync: false, openEffect: "default", openDuration: 450, openSize: "medium" })
   property bool pEnabled: false
   property string pEffect: "crumble"
   property int pDuration: 450
   property string pSize: "medium"
-  property string pWhen: "close"
-  property bool pSync: true
-  property string pOpenEffect: "crumble"
+  property bool pSync: false
+  property string pOpenEffect: "default"
   property int pOpenDuration: 450
   property string pOpenSize: "medium"
-  // Which direction the effect controls edit while closing and opening differ.
+  // Which direction the effect controls edit while closing and opening are not synced.
   property string editing: "close"
   property var saved: defaults
   property bool ready: false
@@ -99,11 +98,11 @@ Panel {
     { key: "matrix", title: "Matrix", glyph: "⠿", detail: "Green digital rain sweeps down and wipes the window away." },
     { key: "default", title: "Default", glyph: "−", detail: "Use your existing Omarchy window animations." }
   ]
-  // The direction the effect controls edit: with one direction picked it is that
-  // one, with both synced it is closing (opening mirrors it), otherwise the
-  // direction chosen in the selector.
-  readonly property bool editOpen: pWhen === "open" || (pWhen === "both" && !pSync && editing === "open")
-  readonly property bool synced: pWhen === "both" && pSync
+  // The direction the effect controls edit: closing when opening is synced to it
+  // (opening mirrors it), otherwise the direction chosen with the tabs. Both
+  // directions always apply together; an effect of Default leaves Omarchy's own.
+  readonly property bool editOpen: !pSync && editing === "open"
+  readonly property bool synced: pSync
   readonly property string curEffect: editOpen ? pOpenEffect : pEffect
   readonly property int curDuration: editOpen ? pOpenDuration : pDuration
   readonly property string curSize: editOpen ? pOpenSize : pSize
@@ -124,16 +123,9 @@ Panel {
     if (!on) { pOpenEffect = pEffect; pOpenDuration = pDuration; pOpenSize = pSize; editing = "close" }
     pSync = on
   }
-  function setWhen(value) {
-    pWhen = value
-    if (value !== "both") editing = value
-  }
   // The effects that would actually play, to know whether the backend is needed.
   function playing() {
-    var list = []
-    if (pWhen !== "open") list.push(pEffect)
-    if (pWhen !== "close") list.push(synced ? pEffect : pOpenEffect)
-    return list.filter(function(e) { return e !== "default" })
+    return [pEffect, synced ? pEffect : pOpenEffect].filter(function(e) { return e !== "default" })
   }
   readonly property bool needsBackend: pEnabled && playing().length > 0
   readonly property bool dirty: JSON.stringify(shape(staged())) !== JSON.stringify(shape(saved))
@@ -146,18 +138,18 @@ Panel {
 
   // Same keys, same order, opening mirrored when synced: staged and saved compare equal when nothing changed.
   function shape(s) {
-    var mirror = s.sync && s.when === "both"
-    return [s.enabled, s.effect, s.duration, s.size, s.when, s.sync,
+    var mirror = s.sync
+    return [s.enabled, s.effect, s.duration, s.size, s.sync,
       mirror ? s.effect : s.openEffect, mirror ? s.duration : s.openDuration, mirror ? s.size : s.openSize]
   }
   function staged() {
-    return { enabled: pEnabled, effect: pEffect, duration: pDuration, size: pSize, when: pWhen, sync: pSync,
+    return { enabled: pEnabled, effect: pEffect, duration: pDuration, size: pSize, sync: pSync,
       openEffect: pOpenEffect, openDuration: pOpenDuration, openSize: pOpenSize }
   }
   function stage(s) {
-    pEnabled = s.enabled; pEffect = s.effect; pDuration = s.duration; pSize = s.size; pWhen = s.when; pSync = s.sync
+    pEnabled = s.enabled; pEffect = s.effect; pDuration = s.duration; pSize = s.size; pSync = s.sync
     pOpenEffect = s.openEffect; pOpenDuration = s.openDuration; pOpenSize = s.openSize
-    editing = s.when === "open" ? "open" : "close"
+    editing = "close"
   }
   function reload() { if (!reader.running) reader.running = true }
   function apply() {
@@ -490,37 +482,24 @@ Panel {
 
             SectionLabel {
               icon: "\uf021"
-              text: "ANIMATE"
+              text: "OPEN & CLOSE"
               hint: root.dirty ? "UNSAVED" : ""
-            }
-
-            Segmented {
-              width: parent.width
-              columns: 3
-              choices: [
-                { value: "close", label: "Closing" },
-                { value: "open", label: "Opening" },
-                { value: "both", label: "Both" }
-              ]
-              selected: root.pWhen
-              onPicked: function(value) { root.setWhen(value) }
             }
 
             SettingSwitch {
               width: parent.width
-              visible: root.pWhen === "both"
-              label: "Same effect for both"
+              label: "Same effect for opening and closing"
               checked: root.pSync
               onToggled: root.setSync(!root.pSync)
             }
 
             Segmented {
               width: parent.width
-              visible: root.pWhen === "both" && !root.pSync
+              visible: !root.pSync
               columns: 2
               choices: [
-                { value: "close", label: "Edit closing" },
-                { value: "open", label: "Edit opening" }
+                { value: "close", label: "Closing" },
+                { value: "open", label: "Opening" }
               ]
               selected: root.editing
               onPicked: function(value) { root.editing = value }
