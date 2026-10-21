@@ -1,17 +1,18 @@
 # WinFX
 
-Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Eight effects, picked from a panel that follows your theme.
+Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Ten effects, picked from a panel that follows your theme.
 
 <p>
-  <img src="docs/previews/panel.png" alt="The WinFX panel: the Animate row with its sync switch, eight effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="295">
+  <img src="docs/previews/panel.png" alt="The WinFX panel: the Animate row with its sync switch, ten effects and the default animation, duration and fragment size choices, the backend status and the Test, Reset and Apply buttons" width="295">
 </p>
 
-![The eight effects closing, rendered from the shipped shaders on a synthetic window](docs/previews/effects.gif)
+![The ten effects closing, rendered from the shipped shaders on a synthetic window](docs/previews/effects.gif)
 
 *Closing, rendered from the shipped shaders on a synthetic window. Opening plays each effect in reverse.*
 
-- **Eight effects.** Crumble, Shatter (jagged glass shards), Dissolve, Pixelate,
-  Explode, Build, Blinds and Glitch.
+- **Ten effects.** Crumble, Shatter (jagged glass shards), Dissolve, Pixelate,
+  Explode, Build, Blinds, Glitch, TV (an old set switching off) and Matrix (digital
+  rain).
 - **Opening and closing.** Animate closing, opening or both. Opening plays an
   effect in reverse, so Build assembles a window from the bottom up and Explode
   pulls its chunks together.
@@ -61,7 +62,7 @@ window in your default terminal; press any key in it to close it and watch the
 effect. The test uses the applied settings, so apply pending changes first.
 
 - **Animate:** Closing, Opening or Both.
-- **Effect:** one of the eight, or Default for Omarchy's own animation.
+- **Effect:** one of the ten, or Default for Omarchy's own animation.
 - **Duration:** 150–1500 ms, with 250/450/750 presets and ±50 ms steps.
 - **Fragment size:** Small, Medium or Large. It scales the pieces, bricks, strips or
   glitch bands of every effect.

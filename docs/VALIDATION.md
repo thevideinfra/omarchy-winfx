@@ -11,7 +11,7 @@ Target: Omarchy 4.0.5, Hyprland 0.56.2.
   failed apply and failed install rollback, and a real CLI install/apply/disable/remove
   run using an isolated HOME and a fake hyprctl boundary.
 - Bash syntax checks for `install.sh` and `uninstall.sh`.
-- All eight shipped GLSL ES 3.20 shaders compile and link on Mesa OpenGL ES 3.2
+- All ten shipped GLSL ES 3.20 shaders compile and link on Mesa OpenGL ES 3.2
   (`tests/render_shaders.py`). Each renders 31 frames against a synthetic
   monitor-sized texture with a smaller window sub-rectangle. Starting pixels match the
   original exactly, final alpha is zero, and premultiplied colour never exceeds alpha.

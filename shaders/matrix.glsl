@@ -27,7 +27,7 @@ void main() {
     // The border and shadow lie outside the window's rect; fade them quickly instead of leaving fragments.
     if(!inside(uv)) { fragColor=texture(tex,v_texcoord)*(1.0-smoothstep(0.0,0.3,p)); return; }
     vec2 pixels=max(surface_size*window_rect.zw,vec2(1.0));
-    float columns=max(8.0,floor(CELLS*1.5));
+    float columns=max(10.0,floor(CELLS*2.4));
     float rows=columns*pixels.y/pixels.x;
     float column=floor(uv.x*columns);
     // Each column's rain starts at its own time and falls at its own speed.
@@ -53,7 +53,7 @@ void main() {
     glyph*=step(0.12,inCell.x)*step(inCell.x,0.88)*step(0.1,inCell.y)*step(inCell.y,0.9);
     glyph*=step(hash21(cell+tick),0.9-0.5*fade);
     float bright=(1.0-fade)*(1.0-fade);
-    vec3 green=mix(vec3(0.1,0.9,0.35),vec3(0.8,1.0,0.85),step(behind,1.5/rows));
+    vec3 green=mix(vec3(0.1,0.9,0.35),vec3(0.8,1.0,0.85),step(behind,1.0/rows));
     vec4 rain=vec4(green*bright*glyph,bright*glyph);
     // The window itself is wiped out behind the head.
     vec4 rest=tinted*(1.0-smoothstep(0.0,0.35,fade));
