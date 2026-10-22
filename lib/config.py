@@ -380,7 +380,12 @@ def apply(ctx, value):
 
 
 def loader(ctx):
-    return 'dofile(' + lua_string(str(ctx.active)) + ') ' + MARKER
+    # pcall keeps Hyprland's config valid if the plugin is removed without its uninstall script.
+    return 'pcall(dofile, ' + lua_string(str(ctx.active)) + ') ' + MARKER
+
+
+def has_loader(text):
+    return any(line.rstrip().endswith(MARKER) for line in text.splitlines())
 
 
 def shell_layout(ctx):
@@ -404,7 +409,12 @@ def integrate(ctx):
     # Validate both files before changing either.
     data, layout = shell_layout(ctx)
     before = ctx.hypr.read_text()
-    after = before if MARKER in before else before + ('' if before.endswith('\n') else '\n') + loader(ctx) + '\n'
+    if has_loader(before):
+        # Refresh a loader written by an earlier version (a bare dofile) in place.
+        after = ''.join(loader(ctx) + '\n' if line.rstrip().endswith(MARKER) else line
+                        for line in before.splitlines(keepends=True))
+    else:
+        after = before + ('' if before.endswith('\n') else '\n') + loader(ctx) + '\n'
     present = any(isinstance(e, dict) and e.get('id') == PLUGIN_ID
                   for section in layout.values() if isinstance(section, list) for e in section)
     if not present:
@@ -422,7 +432,7 @@ def remove_integration(ctx):
     data, layout = shell_layout(ctx)
     before = ctx.hypr.read_text()
     cleaned = ''.join(line for line in before.splitlines(keepends=True)
-                      if line.rstrip('\r\n') != loader(ctx))
+                      if not line.rstrip().endswith(MARKER))
     for key, section in layout.items():
         if isinstance(section, list):
             layout[key] = [e for e in section if not (isinstance(e, dict) and e.get('id') == PLUGIN_ID)]
@@ -482,7 +492,7 @@ def preview():
 def status(ctx):
     result = probe()
     result['settings'] = read_settings(ctx)
-    result['installed'] = ctx.hypr.exists() and loader(ctx) in ctx.hypr.read_text()
+    result['installed'] = ctx.hypr.exists() and has_loader(ctx.hypr.read_text())
     result['target'] = TARGET_HYPRLAND
     result.update(backend_state(ctx, result['commit']))
     headers = header_commit()
@@ -504,7 +514,7 @@ def main():
         elif args.command == 'apply':
             if not args.settings:
                 raise ValueError('apply requires a JSON settings object.')
-            if not ctx.hypr.exists() or loader(ctx) not in ctx.hypr.read_text():
+            if not ctx.hypr.exists() or not has_loader(ctx.hypr.read_text()):
                 raise RuntimeError('Run install.sh before applying settings.')
             result = apply(ctx, json.loads(args.settings))
         elif args.command == 'install':

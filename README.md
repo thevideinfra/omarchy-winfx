@@ -145,8 +145,9 @@ Run before deleting the plugin directory:
 
 It removes the loader, the bar entry and the installed plugin files, reloads
 Hyprland and restarts the shell. It unloads the backend and keeps your settings, the backups and the built
-backend files. `omarchy plugin remove` alone cannot remove the Lua loader,
-so use the script.
+backend files. `omarchy plugin remove` on its own leaves one inert line in
+`hyprland.lua`: the loader is wrapped in `pcall`, so Hyprland's config stays valid, but the
+script is the clean way out.
 
 ## CLI
 

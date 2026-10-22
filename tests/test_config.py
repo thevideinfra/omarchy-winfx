@@ -140,6 +140,18 @@ class ConfigTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             c.validate({**c.DEFAULTS, 'when': 'both'})
 
+    def test_the_loader_survives_a_missing_state_file_and_old_loaders_are_upgraded_and_removed(self):
+        self.assertTrue(c.loader(self.ctx).startswith('pcall(dofile, '))
+        old = 'dofile("' + str(self.ctx.active) + '") ' + c.MARKER
+        self.ctx.hypr.write_text('-- user settings\n' + old + '\n')
+        c.integrate(self.ctx)
+        text = self.ctx.hypr.read_text()
+        self.assertEqual(text.count(c.MARKER), 1)
+        self.assertIn(c.loader(self.ctx), text)
+        self.assertNotIn(old, text)
+        c.remove_integration(self.ctx)
+        self.assertEqual(self.ctx.hypr.read_text(), '-- user settings\n')
+
     def test_startup_loads_the_backend_through_the_helper_not_hyprpm(self):
         result = c.render_lua({**c.DEFAULTS, 'enabled':True}, self.ctx)
         self.assertNotIn('hyprpm', result)
