@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "videinfra.omarchy-winfx",
   "name": "WinFX",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": "thevideinfra",
   "license": "MIT",
-  "description": "Theme-native window open and close effects: crumble, shatter, dissolve and pixelate",
+  "description": "Theme-native window open and close effects for Omarchy: ten effects including shatter, explode, matrix and glitch",
   "kinds": [
     "bar-widget"
   ],

@@ -1,6 +1,6 @@
 # WinFX
 
-Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Ten effects, picked from a panel that follows your theme.
+Window open and close effects for [Omarchy](https://omarchy.org/). Ten effects, picked from a panel that follows your theme.
 
 <p>
   <img src="docs/previews/effects.gif" alt="The ten effects closing, rendered from the shipped shaders on a synthetic window" width="900">
@@ -22,14 +22,16 @@ Window open and close effects for [Omarchy](https://omarchy.org/) / Hyprland. Te
   tabs each keep their own. Both always apply together when you click Apply.
 - **Keep Omarchy's animation on one side.** Choose Default for opening or closing
   and WinFX shades only the other. Out of the box only closing is shaded.
-- **Make it yours.** The gear in the panel header opens its settings: a
-  **Compact**, **Normal** or **Roomy** layout, a **Small**, **Normal** or
-  **Large** font size, an accent colour (the theme's own, or any colour from its
-  palette), the bar icon (`fx` in a small window by default, or `FX`, `fx`, `WFX`, `wfx` or a sparkle), whether the
-  icon dims while effects are off, an optional right-click on the icon to switch
-  effects on or off, and switches for the version and GitHub link, the backend status line and the
-  key hints. They are stored in
-  `shell.json` and also appear under `omarchy bar set videinfra.omarchy-winfx`.
+- **Make it yours.** The gear in the panel header opens its settings:
+  - a **Compact**, **Normal** or **Roomy** layout, a **Small**, **Normal** or **Large** font
+    size, and an accent colour (the theme's own, or any colour from its palette);
+  - the bar icon (`fx` in a small window by default, or `FX`, `fx`, `WFX`, `wfx` or a
+    sparkle), whether it dims while effects are off, and an optional right-click on it to
+    switch effects on or off;
+  - switches for the version and GitHub link, the backend status line and the key hints.
+
+  They are stored in `shell.json` and also appear under
+  `omarchy bar set videinfra.omarchy-winfx`.
 
 **Credit:** WinFX is a panel, installer and set of shaders on top of
 [HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade) by
@@ -38,7 +40,7 @@ and close animations inside Hyprland, and none of this would exist without it. I
 third-party experimental compositor code. WinFX builds it from source against the
 Hyprland headers your system already has.
 
-Targets **Omarchy 4.0.5 / Hyprland 0.56.2**.
+Requires **Omarchy 4.0.5** running Hyprland 0.56.2.
 
 ## Install
 
@@ -46,23 +48,24 @@ Targets **Omarchy 4.0.5 / Hyprland 0.56.2**.
 omarchy plugin add https://github.com/thevideinfra/omarchy-winfx.git --enable --yes
 ```
 
-The widget appears in the bar. Open it and click **Install**. A terminal opens and
-runs `install.sh`: it writes one marked Lua loader into `hyprland.lua`, builds the
-backend if it is missing, restarts the shell and leaves effects **disabled**.
+The widget appears in the bar. Open it and click **Set up**. The panel shows its progress
+(about ten seconds) and then the effect controls; there is no terminal window. Set up
+writes one marked line into your `hyprland.lua` so the effects load at login, builds the
+backend, and leaves effects **disabled** until you apply one.
 
-The backend step builds HyprWindowShade at a pinned commit, with the Hyprland
-headers the `hyprland` package already installed. It needs only `base-devel`,
-`pkgconf` and `git`, which Omarchy normally has, so there is often no password prompt
-at all. If one of them is missing the installer installs it through pacman and asks for
-`sudo` once; declined or failed installation stops setup. It uses no `hyprpm`, does not
-clone Hyprland and adds nothing to hyprpm's repository list. The source and the built
-plugin live in `~/.config/omarchy-winfx/backend/` and the build takes about ten
-seconds. If pacman reports a target not found, run `omarchy update` (or
-`sudo pacman -Syu`) first and click Install again. The installer never forces a plugin
-load: it builds only when the installed headers match the running compositor, and it
-refuses to load a build made for a different Hyprland. The same steps run from a shell
-with `~/.config/omarchy/plugins/videinfra.omarchy-winfx/install.sh --backend`
-(without `--backend` if the backend is already loaded).
+The backend is HyprWindowShade, built at a pinned commit against the Hyprland headers the
+`hyprland` package already installed. The build needs only `base-devel`, `pkgconf` and
+`git`, which Omarchy normally has, so there is often no password prompt at all. If one
+is missing, Set up installs it through pacman and asks for your password once through a
+graphical prompt. It uses no `hyprpm`, does not clone Hyprland and adds nothing to
+hyprpm's repository list. The source and the built plugin live in
+`~/.config/omarchy-winfx/backend/`. If pacman reports a target not found, run
+`omarchy update` (or `sudo pacman -Syu`) first and click Set up again.
+
+WinFX never forces a plugin load: it builds only when the installed headers match the
+running compositor, and it refuses to load a build made for a different Hyprland. The same
+steps run from a shell with
+`~/.config/omarchy/plugins/videinfra.omarchy-winfx/install.sh --backend`.
 
 ## Use
 
@@ -104,11 +107,11 @@ No screenshots are stored. Movement and workspace animations are untouched.
 - **Needs more testing:** fullscreen windows, rotated or scaled monitors, NVIDIA and
   several windows closing at once. See `docs/VALIDATION.md`.
 
-This release intentionally rejects other Hyprland versions. After an upgrade,
-leave effects disabled until compatibility has been checked. After a Hyprland update,
-restart Hyprland, then open the WinFX panel: it shows "Rebuild backend" and builds a
-fresh copy. A plugin built for another Hyprland can crash the compositor, so WinFX
-never loads one whose build stamp does not match the running compositor.
+This release intentionally rejects other Hyprland versions. After a Hyprland update,
+restart Hyprland: at login WinFX rebuilds its backend for the new version and loads it,
+and until you restart the panel says "Restart Hyprland to finish its update". A plugin
+built for another Hyprland can crash the compositor, so WinFX never loads one whose
+build stamp does not match the running compositor.
 
 ## Files and recovery
 
@@ -119,7 +122,8 @@ never loads one whose build stamp does not match the running compositor.
 - Backups: `~/.config/omarchy-winfx/backups/`
 - Backend source, build and stamp: `~/.config/omarchy-winfx/backend/`
 - Integration: one line ending `-- omarchy-winfx managed loader` in
-  `~/.config/hypr/hyprland.lua`, and one widget in `~/.config/omarchy/shell.json`.
+  `~/.config/hypr/hyprland.lua` (it runs `omarchy-winfx load` at login), and one widget in
+  `~/.config/omarchy/shell.json`.
 
 Writes are serialized and replaced atomically per file; failed reloads restore
 prior files. Backups are kept before integration files are edited. Symlinked
@@ -154,6 +158,9 @@ so use the script.
 ~/.config/omarchy/plugins/videinfra.omarchy-winfx/bin/omarchy-winfx preview
 ```
 
+`install` writes the loader, `backend` builds and loads the backend, and `load` is what
+runs at login.
+
 The helper uses Python's standard library. Input is validated and commands use
 argv, never shell interpolation. Homes containing whitespace or `@` are rejected for
 shader activation, because the backend's shader-tag syntax uses those characters as
@@ -168,7 +175,7 @@ python3 tests/render_shaders.py --output /tmp/omarchy-winfx-frames
 python3 tests/render_preview.py --wallpaper wall.jpg --panel docs/previews/panel.png --output preview.png
 ```
 
-The optional shader renderer needs Mesa EGL with OpenGL ES 3.2 and Pillow. It
+The optional shader renderers need Mesa EGL with OpenGL ES 3.2 and Pillow. It
 compiles the shipped shaders, checks their endpoints and premultiplied alpha, and
 renders the comparison GIF. `render_preview.py` makes the 1280×720 `preview.png`
 for the plugin marketplace: effects caught mid-animation beside the panel. It does not test the compositor's snapshot integration.
@@ -176,3 +183,10 @@ for the plugin marketplace: effects caught mid-animation beside the panel. It do
 Backend API reference: HyprWindowShade commit
 `4414596c2fbb64cb5bb4aa7342900051338fed7a`, with upstream 0.56.2 compatibility pin
 `a4c6b8af424a189072427c4c90ef2938e1b481d3`.
+
+## Credits
+
+- [HyprWindowShade](https://github.com/ManofJELLO/HyprWindowShade) by
+  [ManofJELLO](https://github.com/ManofJELLO) does the shading: see the credit at the top.
+- Wallpaper: Polar lights over dark trees by Vincent Guth, used under the
+  [Unsplash License](https://unsplash.com/license). It is the background in `preview.png`.

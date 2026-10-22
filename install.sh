@@ -44,7 +44,7 @@ if (( backend )); then
     fi
     if [[ ${fail:-0} == 1 ]]; then
       echo 'Installing the build tools failed. If pacman says a target was not found, the package' >&2
-      echo 'database may be stale: run `sudo pacman -Syu`, then click Install again.' >&2
+      echo 'database may be stale: run `sudo pacman -Syu`, then click Set up again.' >&2
       exit 1
     fi
   fi
