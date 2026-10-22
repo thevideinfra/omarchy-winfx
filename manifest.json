@@ -24,7 +24,6 @@
       "accent": "theme",
       "showAccent": true,
       "showHeaderInfo": true,
-      "barIcon": "window",
       "dimWhenOff": true,
       "rightClickToggle": false,
       "showStatus": true,
@@ -83,21 +82,6 @@
         "type": "boolean",
         "label": "Show the version and GitHub link in the header",
         "defaultValue": true
-      },
-      {
-        "key": "barIcon",
-        "type": "enum",
-        "label": "Bar icon",
-        "options": [
-          "window",
-          "FX",
-          "fx",
-          "WFX",
-          "wfx",
-          "✦"
-        ],
-        "defaultValue": "window",
-        "description": "The icon the widget shows in the bar and in the panel header: fx in a small window, or letters or a glyph."
       },
       {
         "key": "dimWhenOff",

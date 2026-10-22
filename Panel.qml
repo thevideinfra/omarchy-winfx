@@ -28,12 +28,6 @@ Panel {
   readonly property bool showHints: Model.settingBool(setting("showHints", true), true)
   readonly property bool dimWhenOff: Model.settingBool(setting("dimWhenOff", true), true)
   readonly property bool rightClickToggle: Model.settingBool(setting("rightClickToggle", false), false)
-  // The bar icon (and the panel header's): "fx" in a small window, letters or a glyph, chosen in settings.
-  readonly property var iconChoices: ["window", "FX", "fx", "WFX", "wfx", "✦"]
-  readonly property string barIcon: {
-    var chosen = String(setting("barIcon", "window"))
-    return iconChoices.indexOf(chosen) >= 0 ? chosen : "window"
-  }
   property bool settingsOpen: false
 
   // The version shown in the header comes from this plugin's manifest, so it
@@ -277,8 +271,7 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: root.barIcon === "window" ? "" : root.barIcon
-    iconComponent: root.barIcon === "window" ? windowIcon : null
+    iconComponent: windowIcon
     // Dimmed while effects are off, so the bar shows the state at a glance.
     opacity: root.dimWhenOff && root.loaded && !root.saved.enabled ? 0.5 : 1
     tooltipText: root.needsSetup ? "WinFX · click to set up" : "WinFX · window effects"
@@ -335,30 +328,12 @@ Panel {
           width: parent.width
           implicitHeight: Math.max(heroIcon.implicitHeight, heroLabels.implicitHeight, powerSwitch.implicitHeight)
 
-          Item {
+          WindowFx {
             id: heroIcon
-            implicitWidth: root.barIcon === "window" ? heroWindow.implicitWidth : heroText.implicitWidth
-            implicitHeight: root.barIcon === "window" ? heroWindow.implicitHeight : heroText.implicitHeight
+            size: Math.round(root.fontDisplay * 1.1)
+            color: root.accent
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-
-            WindowFx {
-              id: heroWindow
-              visible: root.barIcon === "window"
-              size: Math.round(root.fontDisplay * 1.1)
-              color: root.accent
-            }
-
-            Text {
-              id: heroText
-              visible: root.barIcon !== "window"
-              textFormat: Text.PlainText
-              text: root.barIcon
-              color: root.accent
-              font.family: root.bar.fontFamily
-              font.pixelSize: root.barIcon.length > 1 ? root.fontTitle : root.fontDisplay
-              font.bold: root.barIcon.length > 1
-            }
           }
 
           // The switch owns enabling, mouse and keyboard alike.
@@ -875,14 +850,6 @@ Panel {
     SectionLabel {
       icon: "\uf2d0"
       text: "BAR ICON"
-    }
-
-    Segmented {
-      width: parent.width
-      columns: 3
-      choices: root.iconChoices.map(function(c) { return { value: c, label: c } })
-      selected: root.barIcon
-      onPicked: function(value) { root.setSetting("barIcon", value) }
     }
 
     SettingSwitch {

@@ -25,9 +25,8 @@ Window open and close effects for [Omarchy](https://omarchy.org/). Ten effects, 
 - **Make it yours.** The gear in the panel header opens its settings:
   - a **Compact**, **Normal** or **Roomy** layout, a **Small**, **Normal** or **Large** font
     size, and an accent colour (the theme's own, or any colour from its palette);
-  - the bar icon (`fx` in a small window by default, or `FX`, `fx`, `WFX`, `wfx` or a
-    sparkle), whether it dims while effects are off, and an optional right-click on it to
-    switch effects on or off;
+  - whether the bar icon (`fx` in a small window) dims while effects are off, and an
+    optional right-click on it to switch effects on or off;
   - switches for the version and GitHub link, the backend status line and the key hints.
 
   They are stored in `shell.json` and also appear under
